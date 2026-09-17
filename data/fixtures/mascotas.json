@@ -1,0 +1,22 @@
+[
+  {
+    "id": "m1",
+    "clienteId": "c1",
+    "nombre": "Max",
+    "especie": "Canino",
+    "raza": "Labrador",
+    "sexo": "M",
+    "fechaNacimiento": "2020-05-10",
+    "pesoKg": 28.5
+  },
+  {
+    "id": "m2",
+    "clienteId": "c2",
+    "nombre": "Luna",
+    "especie": "Felino",
+    "raza": "Siamés",
+    "sexo": "F",
+    "fechaNacimiento": "2019-11-02",
+    "pesoKg": 4.2
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "hc1",
+    "mascotaId": "m1",
+    "fechaApertura": "2024-01-15",
+    "alergias": "",
+    "condicionesCronicas": ""
+  },
+  {
+    "id": "hc2",
+    "mascotaId": "m2",
+    "fechaApertura": "2024-02-01",
+    "alergias": "Polen",
+    "condicionesCronicas": ""
+  }
+]

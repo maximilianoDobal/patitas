@@ -1,0 +1,5 @@
+[
+  { "veterinarioId": "u_vet1", "salaId": "sala1" },
+  { "veterinarioId": "u_vet2", "salaId": "sala2" },
+  { "veterinarioId": "u_vet3", "salaId": "sala3" }
+]

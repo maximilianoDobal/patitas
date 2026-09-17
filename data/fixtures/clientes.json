@@ -1,0 +1,18 @@
+[
+  {
+    "id": "c1",
+    "sucursalId": "suc1",
+    "nombre": "Carlos Rodríguez",
+    "telefono": "11-3847-2910",
+    "email": "carlos.rodriguez@email.com",
+    "dni": null
+  },
+  {
+    "id": "c2",
+    "sucursalId": "suc1",
+    "nombre": "Ana Pérez",
+    "telefono": "11-2938-5674",
+    "email": "ana.perez@email.com",
+    "dni": "30123456"
+  }
+]

@@ -1,0 +1,5 @@
+[
+  { "id": "sala1", "sucursalId": "suc1", "nombre": "Box 1" },
+  { "id": "sala2", "sucursalId": "suc1", "nombre": "Quirófano" },
+  { "id": "sala3", "sucursalId": "suc1", "nombre": "Estética" }
+]

@@ -1,0 +1,7 @@
+[
+  { "salaId": "sala1", "tipoServicioId": "consulta_general" },
+  { "salaId": "sala1", "tipoServicioId": "vacunacion" },
+  { "salaId": "sala2", "tipoServicioId": "cirugia" },
+  { "salaId": "sala2", "tipoServicioId": "consulta_general" },
+  { "salaId": "sala3", "tipoServicioId": "estetica" }
+]

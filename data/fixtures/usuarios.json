@@ -1,0 +1,44 @@
+[
+  {
+    "id": "u_recep1",
+    "sucursalId": "suc1",
+    "rol": "recepcionista",
+    "nombre": "María López",
+    "email": "recepcion@patitas.local",
+    "telefono": "11-5555-0101",
+    "passwordHash": "$2b$10$ITSMO2z3oT6aLICGNBDnx.27ahOlS0Eq6ricVNldPldoEaOM4FAwO"
+  },
+  {
+    "id": "u_vet1",
+    "sucursalId": "suc1",
+    "rol": "veterinario",
+    "nombre": "Dr. García",
+    "email": "garcia@patitas.local",
+    "telefono": "11-5555-0201",
+    "matricula": "MP-1001",
+    "especialidadProfesional": "Clínica",
+    "passwordHash": "$2b$10$cxBSIDta3i7U3rWszFMGy.1mqQdnRYHHrK.4a1u2zkqnJHA31UsHi"
+  },
+  {
+    "id": "u_vet2",
+    "sucursalId": "suc1",
+    "rol": "veterinario",
+    "nombre": "Dra. Martínez",
+    "email": "martinez@patitas.local",
+    "telefono": "11-5555-0202",
+    "matricula": "MP-1002",
+    "especialidadProfesional": "Cirugía",
+    "passwordHash": "$2b$10$eXinPUsI5N3qWeqTAlNIHespPFsi2mNTD643B1/iY4NNR47Fc2u.y"
+  },
+  {
+    "id": "u_vet3",
+    "sucursalId": "suc1",
+    "rol": "veterinario",
+    "nombre": "Dra. Ruiz",
+    "email": "ruiz@patitas.local",
+    "telefono": "11-5555-0203",
+    "matricula": "MP-1003",
+    "especialidadProfesional": "Estética",
+    "passwordHash": "$2b$10$Z1jyopY4vWXMlnvaR5jVm.kzClA89s07VirBL8DYSbsAG.iGIxSM6"
+  }
+]

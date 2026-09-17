@@ -1,0 +1,30 @@
+[
+  {
+    "id": "t1",
+    "sucursalId": "suc1",
+    "mascotaId": "m1",
+    "tipoServicioId": "consulta_general",
+    "veterinarioId": "u_vet1",
+    "salaId": "sala1",
+    "fecha": "2026-09-17",
+    "horaInicio": "09:00",
+    "duracionMinutos": 30,
+    "estado": "confirmado",
+    "notasRecepcion": "",
+    "creadoPor": "u_recep1"
+  },
+  {
+    "id": "t2",
+    "sucursalId": "suc1",
+    "mascotaId": "m2",
+    "tipoServicioId": "vacunacion",
+    "veterinarioId": "u_vet1",
+    "salaId": "sala1",
+    "fecha": "2026-09-17",
+    "horaInicio": "10:30",
+    "duracionMinutos": 30,
+    "estado": "programado",
+    "notasRecepcion": "",
+    "creadoPor": "u_recep1"
+  }
+]
