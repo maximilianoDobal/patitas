@@ -30,6 +30,11 @@ yarn-error.log*
 # env
 .env
 .env*.local
+.env.local
+
+# local PostgreSQL setup (dev only; production uses managed DB + migrations)
+/scripts/fixture-uuid.mjs
+/scripts/setup-postgres.mjs
 
 # typescript
 next-env.d.ts

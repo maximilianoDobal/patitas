@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, requireStaff } from "@/lib/auth";
-import { getTurnoById, updateTurno } from "@/lib/repos/mockStore";
+import { getTurnoById, updateTurno } from "@/lib/repos";
 
 export async function GET(_request, { params }) {
   const { id } = await params;
@@ -11,7 +11,7 @@ export async function GET(_request, { params }) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
 
-  const turno = getTurnoById(id);
+  const turno = await getTurnoById(id);
   if (!turno) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   if (session.rol === "veterinario" && turno.veterinarioId !== session.userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -30,7 +30,7 @@ export async function PATCH(request, { params }) {
 
   try {
     const body = await request.json();
-    const turno = updateTurno(id, body, session);
+    const turno = await updateTurno(id, body, session);
     return NextResponse.json({ turno });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 });

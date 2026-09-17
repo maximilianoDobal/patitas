@@ -1,30 +1,49 @@
 # Clínica Veterinaria Patitas
 
-MVP de gestión de turnos, clientes, mascotas e historias clínicas (Next.js App Router, JavaScript, datos mock).
+MVP de gestión de turnos, clientes, mascotas e historias clínicas (Next.js App Router, JavaScript, **PostgreSQL obligatorio**).
 
 ## Requisitos
 
 - Node.js 20+
 - npm
+- PostgreSQL local (psql en PATH o `PG_BIN`)
 
-## Desarrollo
+## Configuración local
 
-```bash
-npm install
-npm run dev
-npm test
-```
+1. Copiá `.env.example` a `.env.local` y completá:
+
+   - `DATABASE_URL` — conexión a la base `patitas` (obligatoria para arrancar la app).
+   - `AUTH_SECRET` — recomendado en producción.
+
+2. Creá y sembrá la base (drop/create + schema + fixtures):
+
+   ```bash
+   # PowerShell: definí la contraseña del usuario postgres
+   $env:PGPASSWORD = "tu_password"
+   npm run db:setup
+   ```
+
+   Tras **cambios breaking** en `sql/schema.sql`, volvé a ejecutar `npm run db:setup` (no hay migraciones incrementales en este MVP).
+
+3. Instalá dependencias y levantá el servidor:
+
+   ```bash
+   npm install
+   npm run dev
+   ```
 
 Abrí [http://localhost:3000](http://localhost:3000) (redirige a login).
 
-### Usuarios demo (fixtures)
+### Usuarios demo (seed)
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
 | Recepcionista | recepcion@patitas.local | recep123 |
 | Veterinario | garcia@patitas.local | vet123 |
 
-Otros veterinarios en fixtures usan la misma contraseña `vet123`.
+Otros veterinarios del seed usan la misma contraseña `vet123`.
+
+Los **Clientes** del demo se cargan como usuarios rol `cliente` (sin portal); altas en recepción crean el mismo modelo CTI con hash de contraseña no usable hasta activación futura.
 
 Para regenerar hashes bcrypt en `data/fixtures/usuarios.json` (solo si agregás `plainPassword` temporal):
 
@@ -32,16 +51,9 @@ Para regenerar hashes bcrypt en `data/fixtures/usuarios.json` (solo si agregás 
 node scripts/write-fixture-hashes.mjs
 ```
 
-## Documentación de dominio
-
-- `CONTEXT.md` — glosario
-- `docs/adr/` — decisiones de arquitectura
-- `sql/schema.sql` — esquema PostgreSQL orientativo
-
 ## Alcance MVP
 
-- RF1, RF3, RF7, RF2 básico, login recepcionista/veterinario, repositorio mock + JSON.
+- RF1, RF3, RF7, RF2 básico, login recepcionista/veterinario, persistencia PostgreSQL.
+- Fixtures JSON en `data/fixtures/` alimentan **solo** el script `db:setup`, no el runtime.
 
 Fuera del MVP: portal cliente, notificaciones, facturación UI (tabla `comprobantes` preparada en SQL).
-
-Los cambios en runtime se guardan **en memoria** (se reinician al recargar el servidor). Los JSON en `data/fixtures/` son la semilla inicial.

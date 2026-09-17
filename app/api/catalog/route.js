@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, requireStaff } from "@/lib/auth";
-import { getCatalog } from "@/lib/repos/mockStore";
+import { getCatalog } from "@/lib/repos";
 import { TIPOS_SERVICIO } from "@/lib/constants";
 
 export async function GET() {
@@ -10,5 +10,6 @@ export async function GET() {
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
-  return NextResponse.json({ ...getCatalog(session), tiposServicio: TIPOS_SERVICIO });
+  const catalog = await getCatalog(session);
+  return NextResponse.json({ ...catalog, tiposServicio: TIPOS_SERVICIO });
 }

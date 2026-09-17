@@ -20,7 +20,7 @@ export default function AgendaPage() {
   const [catalog, setCatalog] = useState(null);
   const [session, setSession] = useState(null);
   const [fecha, setFecha] = useState(todayIso());
-  const [vista, setVista] = useState("semana");
+  const [vista, setVista] = useState("dia");
   const [filtroVet, setFiltroVet] = useState("");
   const [filtroSala, setFiltroSala] = useState("");
   const [turnos, setTurnos] = useState([]);
@@ -137,10 +137,10 @@ export default function AgendaPage() {
           <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white text-sm shadow-sm">
             <button
               type="button"
-              className={cn("px-4 py-2 font-semibold transition-colors", vista === "lista" ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-50")}
-              onClick={() => setVista("lista")}
+              className={cn("px-4 py-2 font-semibold transition-colors", vista === "dia" ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-50")}
+              onClick={() => setVista("dia")}
             >
-              Lista
+              Día
             </button>
             <button
               type="button"

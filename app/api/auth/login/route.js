@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, sessionCookieOptions } from "@/lib/auth";
 import { COOKIE_SESSION } from "@/lib/constants";
-import { verifyStaffCredentials } from "@/lib/repos/mockStore";
+import { verifyStaffCredentials } from "@/lib/repos";
 
 export async function POST(request) {
   const body = await request.json();

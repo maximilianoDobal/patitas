@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, requireStaff } from "@/lib/auth";
-import { createMascota, listMascotas } from "@/lib/repos/mockStore";
+import { createMascota, listMascotas } from "@/lib/repos";
 
 export async function GET(request) {
   const session = await getSession();
@@ -11,7 +11,7 @@ export async function GET(request) {
   }
   const { searchParams } = new URL(request.url);
   const clienteId = searchParams.get("clienteId") || undefined;
-  return NextResponse.json({ mascotas: listMascotas({ clienteId }) });
+  return NextResponse.json({ mascotas: await listMascotas({ clienteId }) });
 }
 
 export async function POST(request) {
@@ -23,7 +23,7 @@ export async function POST(request) {
   }
   try {
     const body = await request.json();
-    const result = createMascota(body);
+    const result = await createMascota(body);
     return NextResponse.json(result, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, requireStaff } from "@/lib/auth";
-import { createTurno, listTurnos } from "@/lib/repos/mockStore";
+import { createTurno, listTurnos } from "@/lib/repos";
 
 export async function GET(request) {
   const session = await getSession();
@@ -25,7 +25,7 @@ export async function GET(request) {
     filters.veterinarioId = session.userId;
   }
 
-  return NextResponse.json({ turnos: listTurnos(filters) });
+  return NextResponse.json({ turnos: await listTurnos(filters) });
 }
 
 export async function POST(request) {
@@ -38,7 +38,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const turno = createTurno(
+    const turno = await createTurno(
       {
         ...body,
         sucursalId: session.sucursalId,

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, requireStaff } from "@/lib/auth";
-import { listConsultasByMascota, upsertConsultaForTurno } from "@/lib/repos/mockStore";
+import { listConsultasByMascota, upsertConsultaForTurno } from "@/lib/repos";
 
 export async function GET(request) {
   const session = await getSession();
@@ -13,7 +13,7 @@ export async function GET(request) {
   if (!mascotaId) {
     return NextResponse.json({ error: "mascotaId requerido" }, { status: 400 });
   }
-  return NextResponse.json({ consultas: listConsultasByMascota(mascotaId) });
+  return NextResponse.json({ consultas: await listConsultasByMascota(mascotaId) });
 }
 
 export async function POST(request) {
@@ -26,7 +26,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     if (!body.turnoId) throw new Error("turnoId requerido");
-    const consulta = upsertConsultaForTurno(body.turnoId, body, session);
+    const consulta = await upsertConsultaForTurno(body.turnoId, body, session);
     return NextResponse.json({ consulta }, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 });

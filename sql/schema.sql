@@ -1,5 +1,7 @@
--- Esquema orientativo PostgreSQL — Clínica Veterinaria Patitas
--- MVP runtime usa repositorio mock; este archivo es la fuente de verdad del modelo.
+-- Esquema PostgreSQL — Clínica Veterinaria Patitas
+-- Runtime MVP: PostgreSQL obligatorio (DATABASE_URL). Fixtures solo vía db:setup.
+-- IDs de entidad: UUID. tipos_servicio.id permanece TEXT (catálogo).
+-- Seed desde fixtures: UUID v5 determinísticos (scripts/fixture-uuid.mjs).
 
 CREATE TABLE sucursales (
   id UUID PRIMARY KEY,
@@ -63,18 +65,9 @@ CREATE TABLE veterinario_sala_preferida (
   sala_id UUID NOT NULL REFERENCES salas (id)
 );
 
-CREATE TABLE clientes_mascotas (
-  id UUID PRIMARY KEY,
-  sucursal_id UUID NOT NULL REFERENCES sucursales (id),
-  nombre TEXT NOT NULL,
-  telefono TEXT NOT NULL,
-  email TEXT NOT NULL,
-  dni TEXT
-);
-
 CREATE TABLE mascotas (
   id UUID PRIMARY KEY,
-  cliente_id UUID NOT NULL REFERENCES clientes_mascotas (id),
+  cliente_id UUID NOT NULL REFERENCES clientes (usuario_id),
   nombre TEXT NOT NULL,
   especie TEXT,
   raza TEXT,

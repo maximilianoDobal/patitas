@@ -36,7 +36,7 @@ export async function middleware(request) {
     const recepOnlyPage = pathname === "/clientes" || pathname === "/mascotas";
     const vetOnlyPage = pathname === "/consultas";
     if (recepOnlyPage && rol === "veterinario") {
-      return NextResponse.redirect(new URL("/agenda", request.url));
+      return NextResponse.redirect(new URL("/sin-acceso", request.url));
     }
     if (vetOnlyPage && rol === "recepcionista") {
       return NextResponse.redirect(new URL("/agenda", request.url));

@@ -51,7 +51,7 @@ export default function MascotasPage() {
         <CardContent>
           <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
             <Select required value={form.clienteId} onChange={(e) => setForm({ ...form, clienteId: e.target.value })}>
-              <option value="">Cliente titular</option>
+              <option value="">Cliente</option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
