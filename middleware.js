@@ -10,14 +10,24 @@ function getSecret() {
   return new TextEncoder().encode(secret);
 }
 
+function isPublicPath(pathname) {
+  if (pathname === "/login" || pathname === "/admin/ingreso") return true;
+  if (pathname === "/portal/ingreso" || pathname === "/portal/activar") return true;
+  if (pathname === "/api/auth/login") return true;
+  if (pathname === "/api/auth/login-portal") return true;
+  if (pathname === "/api/auth/login-admin") return true;
+  if (pathname === "/api/auth/activacion") return true;
+  if (pathname === "/api/auth/logout") return true;
+  return false;
+}
+
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  if (
-    pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico" ||
-    pathname === "/login" ||
-    pathname === "/api/auth/login"
-  ) {
+  if (pathname.startsWith("/_next") || pathname === "/favicon.ico") {
+    return NextResponse.next();
+  }
+
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -26,6 +36,12 @@ export async function middleware(request) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
+    if (pathname.startsWith("/portal")) {
+      return NextResponse.redirect(new URL("/portal/ingreso", request.url));
+    }
+    if (pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/admin/ingreso", request.url));
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -33,13 +49,37 @@ export async function middleware(request) {
     const { payload } = await jwtVerify(token, getSecret());
     const rol = payload.rol;
 
-    const recepOnlyPage = pathname === "/clientes" || pathname === "/mascotas";
+    if (rol === "cliente") {
+      const allowedPage = pathname.startsWith("/portal");
+      const allowedApi =
+        pathname.startsWith("/api/portal") ||
+        pathname.startsWith("/api/auth/logout") ||
+        pathname.startsWith("/api/me");
+      if (pathname.startsWith("/api/") && !allowedApi) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
+      if (!pathname.startsWith("/api/") && !allowedPage) {
+        return NextResponse.redirect(new URL("/portal/inicio", request.url));
+      }
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/portal")) {
+      return NextResponse.redirect(new URL("/agenda", request.url));
+    }
+
+    const recepOnlyPage = pathname === "/clientes" || pathname === "/mascotas" || pathname === "/solicitudes";
     const vetOnlyPage = pathname === "/consultas";
+    const adminOnlyPage = pathname.startsWith("/admin");
+
     if (recepOnlyPage && rol === "veterinario") {
       return NextResponse.redirect(new URL("/sin-acceso", request.url));
     }
     if (vetOnlyPage && rol !== "veterinario") {
       return NextResponse.redirect(new URL("/agenda", request.url));
+    }
+    if (adminOnlyPage && rol !== "administrador") {
+      return NextResponse.redirect(new URL("/sin-acceso", request.url));
     }
 
     const operativo = isRolOperativo(rol);
@@ -52,7 +92,16 @@ export async function middleware(request) {
     if (pathname.startsWith("/api/auth/switch-sucursal") && !operativo) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
+    if (pathname.startsWith("/api/solicitudes") && !operativo) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+    if (pathname.startsWith("/api/admin") && rol !== "administrador") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
     if (pathname.startsWith("/api/consultas") && rol !== "veterinario") {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+    if (pathname.startsWith("/api/portal")) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 

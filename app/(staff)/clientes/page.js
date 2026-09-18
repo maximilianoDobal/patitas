@@ -11,6 +11,7 @@ export default function ClientesPage() {
   const [busqueda, setBusqueda] = useState("");
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "", dni: "" });
   const [error, setError] = useState("");
+  const [activMsg, setActivMsg] = useState("");
 
   async function load(q) {
     const qs = q?.trim() ? `?q=${encodeURIComponent(q.trim())}` : "";
@@ -35,6 +36,18 @@ export default function ClientesPage() {
     const t = setTimeout(() => load(busqueda), 200);
     return () => clearTimeout(t);
   }, [busqueda]);
+
+  async function enviarActivacion(clienteId) {
+    setActivMsg("");
+    setError("");
+    const res = await fetch(`/api/clientes/${clienteId}/activacion`, { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "No se pudo enviar activación");
+      return;
+    }
+    setActivMsg(data.message || "Activación enviada.");
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -63,6 +76,7 @@ export default function ClientesPage() {
         aria-label="Buscar clientes"
       />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {activMsg ? <p className="text-sm text-emerald-700">{activMsg}</p> : null}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Registrar cliente</CardTitle>
@@ -81,15 +95,20 @@ export default function ClientesPage() {
       </Card>
       <Card className="divide-y divide-slate-50 p-0">
         {clientes.map((c) => (
-          <div key={c.id} className="px-5 py-4">
-            <p className="font-semibold text-slate-800">{c.nombre}</p>
-            <p className="text-sm text-slate-500">
-              {c.telefono} · {c.email}
-              {c.dni ? ` · DNI ${c.dni}` : ""}
-              {c.sucursalPrimeraAltaId
-                ? ` · Alta ${sucursalCodigo[c.sucursalPrimeraAltaId] ?? "sucursal"}`
-                : ""}
-            </p>
+          <div key={c.id} className="flex flex-wrap items-start justify-between gap-2 px-5 py-4">
+            <div>
+              <p className="font-semibold text-slate-800">{c.nombre}</p>
+              <p className="text-sm text-slate-500">
+                {c.telefono} · {c.email}
+                {c.dni ? ` · DNI ${c.dni}` : ""}
+                {c.sucursalPrimeraAltaId
+                  ? ` · Alta ${sucursalCodigo[c.sucursalPrimeraAltaId] ?? "sucursal"}`
+                  : ""}
+              </p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={() => enviarActivacion(c.id)}>
+              Activar portal
+            </Button>
           </div>
         ))}
       </Card>

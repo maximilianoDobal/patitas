@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Calendar, FileText, LogOut, PawPrint, Settings, Users } from "lucide-react";
+import { Calendar, ClipboardList, FileText, LogOut, PawPrint, Settings, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { isRolOperativo } from "@/lib/constants";
@@ -13,8 +13,9 @@ const NAV = [
   { href: "/agenda", label: "Agenda", Icon: Calendar, roles: ["recepcionista", "veterinario", "administrador"] },
   { href: "/clientes", label: "Clientes", Icon: Users, roles: ["recepcionista", "administrador"] },
   { href: "/mascotas", label: "Mascotas", Icon: PawPrint, roles: ["recepcionista", "administrador"] },
+  { href: "/solicitudes", label: "Solicitudes", Icon: ClipboardList, roles: ["recepcionista", "administrador"] },
   { href: "/consultas", label: "Consultas", Icon: FileText, roles: ["veterinario"] },
-  { label: "Administración", Icon: Settings, roles: ["administrador"], proximamente: true },
+  { href: "/admin", label: "Administración", Icon: Settings, roles: ["administrador"] },
 ];
 
 function initials(nombre) {
@@ -107,21 +108,8 @@ export function StaffShell({ session, sucursal, sucursales = [], children }) {
           <nav className="flex-1 overflow-y-auto px-3 py-5">
             <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-widest text-slate-400">Menú principal</p>
             <div className="space-y-0.5">
-              {items.map(({ href, label, Icon, proximamente }) => {
-                if (proximamente) {
-                  return (
-                    <div
-                      key={label}
-                      className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400"
-                      title="Próximamente — epic portales"
-                    >
-                      <Icon size={16} className="text-slate-300" />
-                      <span className="flex-1 text-left">{label}</span>
-                      <span className="text-[9px] font-semibold uppercase tracking-wide">Próx.</span>
-                    </div>
-                  );
-                }
-                const active = pathname === href;
+              {items.map(({ href, label, Icon }) => {
+                const active = pathname === href || (href === "/admin" && pathname.startsWith("/admin"));
                 return (
                   <Link
                     key={href}

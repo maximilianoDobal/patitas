@@ -14,6 +14,8 @@ MVP de gestión de turnos, clientes, mascotas e historias clínicas (Next.js App
 
    - `DATABASE_URL` — conexión a la base `patitas` (obligatoria para arrancar la app).
    - `AUTH_SECRET` — recomendado en producción.
+   - `APP_BASE_URL` — URL pública para links de activación portal (default `http://localhost:3000`).
+   - `EMAILJS_*` — activación portal (ver `.env.example`).
 
 2. Creá y sembrá la base (drop/create + schema + fixtures):
 
@@ -48,7 +50,13 @@ Otros veterinarios del seed en **PAT-CENTRO** usan la misma contraseña `vet123`
 
 Recepción y administración pueden cambiar la **sucursal activa** en el menú lateral (reemite la sesión JWT). **Clientes** y **Mascotas** son globales a la marca; **Turnos** y catálogo operativo siguen la sucursal activa.
 
-Los **Clientes** del demo se cargan como usuarios rol `cliente` (sin portal); altas en recepción crean el mismo modelo CTI con hash de contraseña no usable hasta activación futura.
+| Cliente demo | carlos.rodriguez@email.com / ana.perez@email.com | Activar portal (EmailJS o link en consola dev) → elegir contraseña |
+
+**Portales:** `/portal/ingreso` (clientes), `/admin/ingreso` (administrador), `/login` (recepción/veterinario).
+
+Flujo demo solicitud: cliente activado → solicitud en **PAT-NORTE** → recepción **Solicitudes** → confirmar (vet automático) → turno en agenda.
+
+Los **Clientes** del seed tienen hash no usable hasta activación one-shot por email.
 
 Para regenerar hashes bcrypt en `data/fixtures/usuarios.json` (solo si agregás `plainPassword` temporal):
 
@@ -61,4 +69,4 @@ node scripts/write-fixture-hashes.mjs
 - RF1, RF3, RF7, RF2 básico, login recepcionista/veterinario, persistencia PostgreSQL.
 - Fixtures JSON en `data/fixtures/` alimentan **solo** el script `db:setup`, no el runtime.
 
-Fuera del MVP: portal cliente, notificaciones, facturación UI (tabla `comprobantes` preparada en SQL).
+Fuera del MVP: RF4 notificaciones masivas, facturación UI (tabla `comprobantes` preparada en SQL).

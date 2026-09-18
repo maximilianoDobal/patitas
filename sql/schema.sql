@@ -19,7 +19,8 @@ CREATE TABLE usuarios (
   email TEXT NOT NULL UNIQUE,
   telefono TEXT,
   password_hash TEXT NOT NULL,
-  rol TEXT NOT NULL CHECK (rol IN ('recepcionista', 'veterinario', 'administrador', 'cliente'))
+  rol TEXT NOT NULL CHECK (rol IN ('recepcionista', 'veterinario', 'administrador', 'cliente')),
+  activo BOOLEAN NOT NULL DEFAULT true
 );
 
 CREATE TABLE recepcionistas (
@@ -122,3 +123,31 @@ CREATE TABLE comprobantes (
   estado TEXT DEFAULT 'borrador',
   creado_en TIMESTAMPTZ DEFAULT now()
 );
+
+CREATE TABLE activaciones_portal (
+  id UUID PRIMARY KEY,
+  token_hash TEXT NOT NULL,
+  usuario_id UUID NOT NULL REFERENCES usuarios (id),
+  expira_en TIMESTAMPTZ NOT NULL,
+  usado_en TIMESTAMPTZ
+);
+
+CREATE INDEX activaciones_portal_usuario_idx ON activaciones_portal (usuario_id);
+
+CREATE TABLE solicitudes_turno (
+  id UUID PRIMARY KEY,
+  cliente_id UUID NOT NULL REFERENCES clientes (usuario_id),
+  mascota_id UUID NOT NULL REFERENCES mascotas (id),
+  sucursal_id UUID NOT NULL REFERENCES sucursales (id),
+  tipo_servicio_id TEXT NOT NULL REFERENCES tipos_servicio (id),
+  fecha_preferida DATE NOT NULL,
+  hora_inicio_preferida TIME NOT NULL,
+  veterinario_id_preferido UUID REFERENCES veterinarios (usuario_id),
+  estado TEXT NOT NULL CHECK (estado IN ('pendiente', 'confirmada', 'rechazada', 'cancelada')),
+  motivo_rechazo TEXT,
+  turno_id UUID REFERENCES turnos (id),
+  creado_en TIMESTAMPTZ DEFAULT now(),
+  actualizado_en TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX solicitudes_turno_sucursal_estado_idx ON solicitudes_turno (sucursal_id, estado);
