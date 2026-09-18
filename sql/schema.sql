@@ -11,6 +11,7 @@ CREATE TABLE sucursales (
   localidad TEXT
 );
 
+-- usuarios.sucursal_id: sede home del staff; para rol cliente = sucursal de primera alta (ADR-0006).
 CREATE TABLE usuarios (
   id UUID PRIMARY KEY,
   sucursal_id UUID NOT NULL REFERENCES sucursales (id),

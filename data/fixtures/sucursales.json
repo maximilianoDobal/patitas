@@ -5,5 +5,12 @@
     "nombreComercial": "Clínica Veterinaria Patitas",
     "direccion": "Av. Corrientes 1234",
     "localidad": "CABA"
+  },
+  {
+    "id": "suc2",
+    "codigoInterno": "PAT-NORTE",
+    "nombreComercial": "Patitas Norte",
+    "direccion": "Av. del Libertador 4500",
+    "localidad": "CABA"
   }
 ]

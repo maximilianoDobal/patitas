@@ -73,7 +73,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <p className="mt-4 text-xs text-slate-400">
-            Demo: recepcion@patitas.local / recep123 — garcia@patitas.local / vet123
+            Demo: recepcion@patitas.local / recep123 — admin@patitas.local / admin123 — garcia@patitas.local / vet123
           </p>
         </CardContent>
       </Card>

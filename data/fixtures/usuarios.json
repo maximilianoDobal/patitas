@@ -40,5 +40,34 @@
     "matricula": "MP-1003",
     "especialidadProfesional": "Estética",
     "passwordHash": "$2b$10$Z1jyopY4vWXMlnvaR5jVm.kzClA89s07VirBL8DYSbsAG.iGIxSM6"
+  },
+  {
+    "id": "u_recep_norte",
+    "sucursalId": "suc2",
+    "rol": "recepcionista",
+    "nombre": "Laura Fernández",
+    "email": "recepcion.norte@patitas.local",
+    "telefono": "11-5555-0301",
+    "passwordHash": "$2b$10$86Z8FgC/bL5hP6DO3.V9/OcxKR3T2Xrugqveb07KqdlPJ05o/i00a"
+  },
+  {
+    "id": "u_vet_norte",
+    "sucursalId": "suc2",
+    "rol": "veterinario",
+    "nombre": "Dr. Pérez",
+    "email": "perez.norte@patitas.local",
+    "telefono": "11-5555-0302",
+    "matricula": "MP-2001",
+    "especialidadProfesional": "Clínica",
+    "passwordHash": "$2b$10$r4bmyRWU.YDWFYtqgQnzmeYKo4M15ER.ai6aDgBQCGRvZMVQBj6PS"
+  },
+  {
+    "id": "u_admin1",
+    "sucursalId": "suc1",
+    "rol": "administrador",
+    "nombre": "Admin Demo",
+    "email": "admin@patitas.local",
+    "telefono": "11-5555-0001",
+    "passwordHash": "$2b$10$1XguT7uURLqlyCHrt6zh3efiLsRCVgoePq2MRwcTcsHspyzPuBLeG"
   }
 ]

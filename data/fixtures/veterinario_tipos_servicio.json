@@ -4,5 +4,8 @@
   { "veterinarioId": "u_vet2", "tipoServicioId": "cirugia" },
   { "veterinarioId": "u_vet2", "tipoServicioId": "consulta_general" },
   { "veterinarioId": "u_vet2", "tipoServicioId": "vacunacion" },
-  { "veterinarioId": "u_vet3", "tipoServicioId": "estetica" }
+  { "veterinarioId": "u_vet3", "tipoServicioId": "estetica" },
+  { "veterinarioId": "u_vet_norte", "tipoServicioId": "consulta_general" },
+  { "veterinarioId": "u_vet_norte", "tipoServicioId": "vacunacion" },
+  { "veterinarioId": "u_vet_norte", "tipoServicioId": "cirugia" }
 ]

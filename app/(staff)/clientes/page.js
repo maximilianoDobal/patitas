@@ -7,17 +7,34 @@ import { Input } from "@/components/ui/input";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState([]);
+  const [sucursalCodigo, setSucursalCodigo] = useState({});
+  const [busqueda, setBusqueda] = useState("");
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "", dni: "" });
   const [error, setError] = useState("");
 
-  async function load() {
-    const res = await fetch("/api/clientes");
+  async function load(q) {
+    const qs = q?.trim() ? `?q=${encodeURIComponent(q.trim())}` : "";
+    const res = await fetch(`/api/clientes${qs}`);
     setClientes((await res.json()).clientes || []);
   }
 
   useEffect(() => {
-    load();
+    fetch("/api/catalog")
+      .then((r) => r.json())
+      .then((cat) => {
+        const map = {};
+        (cat.sucursales || []).forEach((s) => {
+          map[s.id] = s.codigoInterno;
+        });
+        setSucursalCodigo(map);
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => load(busqueda), 200);
+    return () => clearTimeout(t);
+  }, [busqueda]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -33,12 +50,18 @@ export default function ClientesPage() {
       return;
     }
     setForm({ nombre: "", telefono: "", email: "", dni: "" });
-    load();
+    load(busqueda);
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h2 className="text-2xl font-bold text-slate-800">Clientes</h2>
+      <Input
+        placeholder="Buscar por nombre, email o DNI…"
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        aria-label="Buscar clientes"
+      />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <Card>
         <CardHeader>
@@ -63,6 +86,9 @@ export default function ClientesPage() {
             <p className="text-sm text-slate-500">
               {c.telefono} · {c.email}
               {c.dni ? ` · DNI ${c.dni}` : ""}
+              {c.sucursalPrimeraAltaId
+                ? ` · Alta ${sucursalCodigo[c.sucursalPrimeraAltaId] ?? "sucursal"}`
+                : ""}
             </p>
           </div>
         ))}

@@ -38,10 +38,15 @@ Abrí [http://localhost:3000](http://localhost:3000) (redirige a login).
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
-| Recepcionista | recepcion@patitas.local | recep123 |
-| Veterinario | garcia@patitas.local | vet123 |
+| Recepcionista (PAT-CENTRO) | recepcion@patitas.local | recep123 |
+| Recepcionista (PAT-NORTE) | recepcion.norte@patitas.local | recep123 |
+| Veterinario (PAT-CENTRO) | garcia@patitas.local | vet123 |
+| Veterinario (PAT-NORTE) | perez.norte@patitas.local | vet123 |
+| Administrador | admin@patitas.local | admin123 |
 
-Otros veterinarios del seed usan la misma contraseña `vet123`.
+Otros veterinarios del seed en **PAT-CENTRO** usan la misma contraseña `vet123`.
+
+Recepción y administración pueden cambiar la **sucursal activa** en el menú lateral (reemite la sesión JWT). **Clientes** y **Mascotas** son globales a la marca; **Turnos** y catálogo operativo siguen la sucursal activa.
 
 Los **Clientes** del demo se cargan como usuarios rol `cliente` (sin portal); altas en recepción crean el mismo modelo CTI con hash de contraseña no usable hasta activación futura.
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { COOKIE_SESSION } from "@/lib/constants";
+import { COOKIE_SESSION, isRolOperativo } from "@/lib/constants";
 
 function getSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -38,14 +38,18 @@ export async function middleware(request) {
     if (recepOnlyPage && rol === "veterinario") {
       return NextResponse.redirect(new URL("/sin-acceso", request.url));
     }
-    if (vetOnlyPage && rol === "recepcionista") {
+    if (vetOnlyPage && rol !== "veterinario") {
       return NextResponse.redirect(new URL("/agenda", request.url));
     }
 
-    if (pathname.startsWith("/api/clientes") && rol !== "recepcionista") {
+    const operativo = isRolOperativo(rol);
+    if (pathname.startsWith("/api/clientes") && !operativo) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
-    if (pathname.startsWith("/api/mascotas") && request.method !== "GET" && rol !== "recepcionista") {
+    if (pathname.startsWith("/api/mascotas") && request.method !== "GET" && !operativo) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+    if (pathname.startsWith("/api/auth/switch-sucursal") && !operativo) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
     if (pathname.startsWith("/api/consultas") && rol !== "veterinario") {

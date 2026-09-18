@@ -1,22 +1,23 @@
 import { NextResponse } from "next/server";
-import { getSession, requireStaff } from "@/lib/auth";
+import { getSession, requireStaff, ROLES_OPERATIVO } from "@/lib/auth";
 import { createCliente, listClientes } from "@/lib/repos";
 
-export async function GET() {
+export async function GET(request) {
   const session = await getSession();
   try {
-    requireStaff(session, ["recepcionista"]);
+    requireStaff(session, ROLES_OPERATIVO);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
-  const clientes = await listClientes(session.sucursalId);
+  const q = request.nextUrl.searchParams.get("q") ?? undefined;
+  const clientes = await listClientes({ q });
   return NextResponse.json({ clientes });
 }
 
 export async function POST(request) {
   const session = await getSession();
   try {
-    requireStaff(session, ["recepcionista"]);
+    requireStaff(session, ROLES_OPERATIVO);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }

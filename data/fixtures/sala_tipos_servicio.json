@@ -3,5 +3,9 @@
   { "salaId": "sala1", "tipoServicioId": "vacunacion" },
   { "salaId": "sala2", "tipoServicioId": "cirugia" },
   { "salaId": "sala2", "tipoServicioId": "consulta_general" },
-  { "salaId": "sala3", "tipoServicioId": "estetica" }
+  { "salaId": "sala3", "tipoServicioId": "estetica" },
+  { "salaId": "sala4", "tipoServicioId": "consulta_general" },
+  { "salaId": "sala4", "tipoServicioId": "vacunacion" },
+  { "salaId": "sala5", "tipoServicioId": "cirugia" },
+  { "salaId": "sala5", "tipoServicioId": "consulta_general" }
 ]

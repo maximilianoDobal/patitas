@@ -1,16 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Calendar, FileText, LogOut, PawPrint, Users } from "lucide-react";
+import { Calendar, FileText, LogOut, PawPrint, Settings, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/input";
+import { isRolOperativo } from "@/lib/constants";
 
 const NAV = [
-  { href: "/agenda", label: "Agenda", Icon: Calendar, roles: ["recepcionista", "veterinario"] },
-  { href: "/clientes", label: "Clientes", Icon: Users, roles: ["recepcionista"] },
-  { href: "/mascotas", label: "Mascotas", Icon: PawPrint, roles: ["recepcionista"] },
+  { href: "/agenda", label: "Agenda", Icon: Calendar, roles: ["recepcionista", "veterinario", "administrador"] },
+  { href: "/clientes", label: "Clientes", Icon: Users, roles: ["recepcionista", "administrador"] },
+  { href: "/mascotas", label: "Mascotas", Icon: PawPrint, roles: ["recepcionista", "administrador"] },
   { href: "/consultas", label: "Consultas", Icon: FileText, roles: ["veterinario"] },
+  { label: "Administración", Icon: Settings, roles: ["administrador"], proximamente: true },
 ];
 
 function initials(nombre) {
@@ -22,10 +26,28 @@ function initials(nombre) {
     .toUpperCase();
 }
 
-export function StaffShell({ session, children }) {
+export function StaffShell({ session, sucursal, sucursales = [], children }) {
   const pathname = usePathname();
   const router = useRouter();
   const items = NAV.filter((n) => n.roles.includes(session.rol));
+  const canSwitchSucursal = isRolOperativo(session.rol) && sucursales.length > 1;
+  const [switchError, setSwitchError] = useState("");
+
+  async function onSwitchSucursal(sucursalId) {
+    if (!sucursalId || sucursalId === session.sucursalId) return;
+    setSwitchError("");
+    const res = await fetch("/api/auth/switch-sucursal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sucursalId }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setSwitchError(data.error || "No se pudo cambiar la sucursal.");
+      return;
+    }
+    router.refresh();
+  }
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -46,6 +68,26 @@ export function StaffShell({ session, children }) {
           </div>
         </div>
         <div className="flex-1" />
+        <div className="hidden min-w-0 flex-col items-end gap-0.5 sm:flex">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Sucursal activa</p>
+          {canSwitchSucursal ? (
+            <Select
+              className="max-w-[200px] text-sm font-semibold"
+              value={session.sucursalId}
+              onChange={(e) => onSwitchSucursal(e.target.value)}
+              aria-label="Cambiar sucursal activa"
+            >
+              {sucursales.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.codigoInterno}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <p className="text-sm font-semibold text-slate-700">{sucursal?.codigoInterno ?? "—"}</p>
+          )}
+          {switchError ? <p className="text-[10px] text-red-600">{switchError}</p> : null}
+        </div>
         <div className="flex items-center gap-2.5 border-l border-slate-100 pl-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xs font-bold text-brand">
             {initials(session.nombre)}
@@ -65,7 +107,20 @@ export function StaffShell({ session, children }) {
           <nav className="flex-1 overflow-y-auto px-3 py-5">
             <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-widest text-slate-400">Menú principal</p>
             <div className="space-y-0.5">
-              {items.map(({ href, label, Icon }) => {
+              {items.map(({ href, label, Icon, proximamente }) => {
+                if (proximamente) {
+                  return (
+                    <div
+                      key={label}
+                      className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400"
+                      title="Próximamente — epic portales"
+                    >
+                      <Icon size={16} className="text-slate-300" />
+                      <span className="flex-1 text-left">{label}</span>
+                      <span className="text-[9px] font-semibold uppercase tracking-wide">Próx.</span>
+                    </div>
+                  );
+                }
                 const active = pathname === href;
                 return (
                   <Link
@@ -89,8 +144,8 @@ export function StaffShell({ session, children }) {
           <div className="border-t border-slate-100 p-4">
             <div className="rounded-xl border border-brand/15 bg-brand/5 p-3">
               <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-brand">Sucursal activa</p>
-              <p className="text-sm font-bold text-slate-700">Patitas Central</p>
-              <p className="mt-0.5 text-xs text-slate-500">08:00 — 18:00 hs</p>
+              <p className="text-sm font-bold text-slate-700">{sucursal?.codigoInterno ?? "—"}</p>
+              <p className="mt-1 text-xs text-slate-500">{sucursal?.nombreComercial ?? ""}</p>
             </div>
           </div>
         </aside>

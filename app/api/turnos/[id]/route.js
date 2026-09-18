@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSession, requireStaff } from "@/lib/auth";
+import { getSession, requireStaff, ROLES_OPERATIVO } from "@/lib/auth";
 import { getTurnoById, updateTurno } from "@/lib/repos";
 
 export async function GET(_request, { params }) {
   const { id } = await params;
   const session = await getSession();
   try {
-    requireStaff(session, ["recepcionista", "veterinario"]);
+    requireStaff(session, [...ROLES_OPERATIVO, "veterinario"]);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
@@ -23,7 +23,7 @@ export async function PATCH(request, { params }) {
   const { id } = await params;
   const session = await getSession();
   try {
-    requireStaff(session, ["recepcionista", "veterinario"]);
+    requireStaff(session, [...ROLES_OPERATIVO, "veterinario"]);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }

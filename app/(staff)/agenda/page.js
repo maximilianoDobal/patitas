@@ -120,7 +120,7 @@ export default function AgendaPage() {
     if (vista === "semana") loadWeekTurnos();
   }
 
-  const isRecep = session?.rol === "recepcionista";
+  const isRecep = session?.rol === "recepcionista" || session?.rol === "administrador";
   const slots = buildTimeSlots();
   const today = todayIso();
 

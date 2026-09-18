@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSession, requireStaff } from "@/lib/auth";
+import { getSession, requireStaff, ROLES_OPERATIVO } from "@/lib/auth";
 import { getCatalog } from "@/lib/repos";
 import { TIPOS_SERVICIO } from "@/lib/constants";
 
 export async function GET() {
   const session = await getSession();
   try {
-    requireStaff(session, ["recepcionista", "veterinario"]);
+    requireStaff(session, [...ROLES_OPERATIVO, "veterinario"]);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
