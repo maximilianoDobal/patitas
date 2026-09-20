@@ -46,3 +46,4 @@ next-env.d.ts
 /AGENTS.md
 /CONTEXT.md
 /skills-lock.json
+/.cursor/
