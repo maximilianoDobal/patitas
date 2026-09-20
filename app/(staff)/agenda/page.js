@@ -11,7 +11,6 @@ import { groupTurnosByOverlap } from "@/lib/turnoOverlapLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
-import { buildTimeSlots } from "@/lib/scheduling";
 import { cn } from "@/lib/utils";
 
 function todayIso() {
@@ -30,6 +29,9 @@ export default function AgendaPage() {
   const [error, setError] = useState("");
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [reprogramTarget, setReprogramTarget] = useState(null);
+  const [daySlots, setDaySlots] = useState([]);
+  const [fechaCerrada, setFechaCerrada] = useState(false);
+  const [semanaHorario, setSemanaHorario] = useState(null);
   const [form, setForm] = useState({
     mascotaId: "",
     tipoServicioId: "consulta_general",
@@ -76,6 +78,36 @@ export default function AgendaPage() {
     loadTurnos();
     if (vista === "semana") loadWeekTurnos();
   }, [session, loadTurnos, loadWeekTurnos, vista]);
+
+  useEffect(() => {
+    const recep = session?.rol === "recepcionista" || session?.rol === "administrador";
+    if (!session || !recep) return;
+    const qs = new URLSearchParams({ fecha, tipoServicioId: form.tipoServicioId });
+    fetch(`/api/disponibilidad?${qs}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setFechaCerrada(!data.abierto);
+        setDaySlots(data.slots || []);
+        if (data.slots?.length && !data.slots.includes(form.horaInicio)) {
+          setForm((f) => ({ ...f, horaInicio: data.slots[0] }));
+        }
+      })
+      .catch(() => {
+        setDaySlots([]);
+        setFechaCerrada(true);
+      });
+  }, [session, fecha, form.tipoServicioId]);
+
+  useEffect(() => {
+    if (!session || vista !== "semana") return;
+    const qs = new URLSearchParams({ mode: "semana", fecha });
+    fetch(`/api/disponibilidad?${qs}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.bounds) setSemanaHorario(data);
+      })
+      .catch(() => setSemanaHorario(null));
+  }, [session, vista, fecha]);
 
   const mascotasById = useMemo(() => {
     const map = new Map();
@@ -133,7 +165,6 @@ export default function AgendaPage() {
   }
 
   const isRecep = session?.rol === "recepcionista" || session?.rol === "administrador";
-  const slots = buildTimeSlots();
   const today = todayIso();
   const dayGroups = useMemo(() => groupTurnosByOverlap(turnos), [turnos]);
 
@@ -297,8 +328,13 @@ export default function AgendaPage() {
                   </option>
                 ))}
               </Select>
-              <Select value={form.horaInicio} onChange={(e) => setForm({ ...form, horaInicio: e.target.value })} aria-label="Hora">
-                {slots.map((s) => (
+              <Select
+                value={form.horaInicio}
+                onChange={(e) => setForm({ ...form, horaInicio: e.target.value })}
+                aria-label="Hora"
+                disabled={!daySlots.length}
+              >
+                {daySlots.map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
@@ -308,7 +344,10 @@ export default function AgendaPage() {
                 value={form}
                 onChange={(excepcion) => setForm({ ...form, ...excepcion })}
               />
-              <Button type="submit" className="col-span-2 lg:col-span-2">
+              {fechaCerrada ? (
+                <p className="col-span-2 text-sm text-amber-700">La sucursal no atiende en esta fecha.</p>
+              ) : null}
+              <Button type="submit" className="col-span-2 lg:col-span-2" disabled={!daySlots.length}>
                 Crear turno
               </Button>
             </form>
@@ -317,7 +356,13 @@ export default function AgendaPage() {
       ) : null}
 
       {vista === "semana" ? (
-        <AgendaWeekGrid anchorFecha={fecha} turnos={weekTurnos} mascotasById={mascotasById} todayIso={today} />
+        <AgendaWeekGrid
+          anchorFecha={fecha}
+          turnos={weekTurnos}
+          mascotasById={mascotasById}
+          todayIso={today}
+          semanaHorario={semanaHorario}
+        />
       ) : (
         <Card className="overflow-hidden p-0">
           <div className="overflow-x-auto">

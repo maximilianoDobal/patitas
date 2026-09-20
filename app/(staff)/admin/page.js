@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
+import { AdminHorariosPanel } from "@/components/AdminHorariosPanel";
 import { TIPOS_SERVICIO } from "@/lib/constants";
 
 export default function AdminConfigPage() {
@@ -157,7 +158,7 @@ export default function AdminConfigPage() {
     <div className="mx-auto max-w-4xl space-y-4">
       <h2 className="text-2xl font-bold text-slate-800">Administración</h2>
       <div className="flex flex-wrap gap-2">
-        {["usuarios", "sucursales", "salas", "matrices"].map((t) => (
+        {["usuarios", "sucursales", "horarios", "salas", "matrices"].map((t) => (
           <Button key={t} type="button" size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>
             {t}
           </Button>
@@ -246,6 +247,8 @@ export default function AdminConfigPage() {
           </Card>
         </>
       ) : null}
+
+      {tab === "horarios" ? <AdminHorariosPanel sucursales={sucursales} /> : null}
 
       {tab === "salas" ? (
         <>

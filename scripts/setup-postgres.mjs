@@ -86,6 +86,20 @@ function buildSeedSql() {
     );
   }
 
+  for (const s of sucursales) {
+    for (let diaSemana = 1; diaSemana <= 7; diaSemana++) {
+      const cerrado = diaSemana >= 6;
+      lines.push(
+        `INSERT INTO sucursal_horario_dia (sucursal_id, dia_semana, cerrado) VALUES (${sqlUuid(s.id)}, ${diaSemana}, ${cerrado ? "TRUE" : "FALSE"});`
+      );
+      if (!cerrado) {
+        lines.push(
+          `INSERT INTO sucursal_horario_tramo (id, sucursal_id, dia_semana, orden, hora_inicio, hora_fin) VALUES (${sqlUuid(`horario-${s.id}-${diaSemana}`)}, ${sqlUuid(s.id)}, ${diaSemana}, 0, '09:00', '18:00');`
+        );
+      }
+    }
+  }
+
   for (const u of usuarios) {
     lines.push(
       `INSERT INTO usuarios (id, sucursal_id, nombre, email, telefono, password_hash, rol) VALUES (${sqlUuid(u.id)}, ${sqlUuid(u.sucursalId)}, ${sqlLiteral(u.nombre)}, ${sqlLiteral(u.email)}, ${sqlLiteral(u.telefono ?? null)}, ${sqlLiteral(u.passwordHash)}, ${sqlLiteral(u.rol)});`

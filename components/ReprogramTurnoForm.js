@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExcepcionAgendaFields } from "@/components/ExcepcionAgendaFields";
-import { buildTimeSlots } from "@/lib/scheduling";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 
 export function ReprogramTurnoForm({ turno, catalog, onSave, onCancel }) {
-  const slots = buildTimeSlots();
+  const [slots, setSlots] = useState([]);
+  const [fechaCerrada, setFechaCerrada] = useState(false);
   const [state, setState] = useState({
     fecha: turno.fecha,
     horaInicio: turno.horaInicio,
@@ -18,6 +18,26 @@ export function ReprogramTurnoForm({ turno, catalog, onSave, onCancel }) {
     categoriaExcepcionAgenda: turno.categoriaExcepcionAgenda,
     motivoExcepcionAgenda: turno.motivoExcepcionAgenda,
   });
+
+  useEffect(() => {
+    const qs = new URLSearchParams({
+      fecha: state.fecha,
+      tipoServicioId: state.tipoServicioId,
+    });
+    fetch(`/api/disponibilidad?${qs}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setFechaCerrada(!data.abierto);
+        setSlots(data.slots || []);
+        if (data.slots?.length && !data.slots.includes(state.horaInicio)) {
+          setState((s) => ({ ...s, horaInicio: data.slots[0] }));
+        }
+      })
+      .catch(() => {
+        setSlots([]);
+        setFechaCerrada(true);
+      });
+  }, [state.fecha, state.tipoServicioId]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
@@ -40,12 +60,16 @@ export function ReprogramTurnoForm({ turno, catalog, onSave, onCancel }) {
               onChange={(e) => setState({ ...state, fecha: e.target.value })}
             />
           </label>
+          {fechaCerrada ? (
+            <p className="text-sm text-amber-700">La sucursal no atiende en esta fecha.</p>
+          ) : null}
           <label className="block text-sm font-medium text-slate-700">
             Hora
             <Select
               className="mt-1.5"
               value={state.horaInicio}
               onChange={(e) => setState({ ...state, horaInicio: e.target.value })}
+              disabled={!slots.length}
             >
               {slots.map((s) => (
                 <option key={s} value={s}>
@@ -102,7 +126,7 @@ export function ReprogramTurnoForm({ turno, catalog, onSave, onCancel }) {
             onChange={(excepcion) => setState({ ...state, ...excepcion })}
           />
           <div className="flex gap-2 pt-2">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1" disabled={!slots.length}>
               Guardar
             </Button>
             <Button type="button" variant="secondary" className="flex-1" onClick={onCancel}>

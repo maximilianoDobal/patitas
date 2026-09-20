@@ -3,31 +3,16 @@
 import clsx from "clsx";
 import { CLINICA_HORARIO, getTipoServicio } from "@/lib/constants";
 import { SolapadoBadge } from "@/components/ExcepcionAgendaFields";
+import { intervalosFueraDeTramos } from "@/lib/horarioSucursal";
 import { parseTimeToMinutes } from "@/lib/scheduling";
 import { layoutTurnosOverlapColumns } from "@/lib/turnoOverlapLayout";
+import { weekRangeFromAnchor } from "@/lib/weekRange";
 import { getTipoServicioHex } from "@/components/TipoServicioBadge";
+
+export { weekRangeFromAnchor };
 
 const SLOT_PX = 52;
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-
-function startOfWeek(isoDate) {
-  const d = new Date(`${isoDate}T12:00:00`);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
-}
-
-function addDays(isoDate, days) {
-  const d = new Date(`${isoDate}T12:00:00`);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-export function weekRangeFromAnchor(anchorIso) {
-  const start = startOfWeek(anchorIso);
-  return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-}
 
 function TurnoCard({ turno, mascotaNombre, onClick, inOverlapCluster = false }) {
   const tipo = getTipoServicio(turno.tipoServicioId);
@@ -71,12 +56,15 @@ function TurnoCard({ turno, mascotaNombre, onClick, inOverlapCluster = false }) 
   );
 }
 
-export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso }) {
+export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, semanaHorario }) {
   const days = weekRangeFromAnchor(anchorFecha);
+  const gridInicio = semanaHorario?.bounds?.inicio ?? CLINICA_HORARIO.inicio;
+  const gridFin = semanaHorario?.bounds?.fin ?? CLINICA_HORARIO.fin;
   const hours = [];
-  for (let h = CLINICA_HORARIO.inicio; h < CLINICA_HORARIO.fin; h++) hours.push(h);
-  const gridStartMin = CLINICA_HORARIO.inicio * 60;
-  const gridHeight = (CLINICA_HORARIO.fin - CLINICA_HORARIO.inicio) * SLOT_PX;
+  for (let h = gridInicio; h < gridFin; h++) hours.push(h);
+  const gridStartMin = gridInicio * 60;
+  const gridEndMin = gridFin * 60;
+  const gridHeight = (gridFin - gridInicio) * SLOT_PX;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
@@ -107,7 +95,7 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso }) 
               <div
                 key={h}
                 className="absolute right-0 left-0 pr-1 text-right text-[10px] text-slate-400"
-                style={{ top: (h - CLINICA_HORARIO.inicio) * SLOT_PX - 6 }}
+                style={{ top: (h - gridInicio) * SLOT_PX - 6 }}
               >
                 {String(h).padStart(2, "0")}:00
               </div>
@@ -116,15 +104,36 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso }) 
           {days.map((fecha) => {
             const dayTurnos = turnos.filter((t) => t.fecha === fecha);
             const overlapLayout = layoutTurnosOverlapColumns(dayTurnos);
+            const dayHorario = semanaHorario?.dias?.[fecha];
+            const diaCerrado = semanaHorario && dayHorario && !dayHorario.abierto;
+            const fuera =
+              semanaHorario && dayHorario?.abierto && dayHorario.tramos?.length
+                ? intervalosFueraDeTramos(dayHorario.tramos, gridStartMin, gridEndMin)
+                : [];
             return (
               <div key={fecha} className="relative border-r border-slate-100 bg-white last:border-r-0" style={{ height: gridHeight }}>
                 {hours.map((h) => (
                   <div
                     key={h}
                     className="absolute right-0 left-0 border-t border-slate-100"
-                    style={{ top: (h - CLINICA_HORARIO.inicio) * SLOT_PX }}
+                    style={{ top: (h - gridInicio) * SLOT_PX }}
                   />
                 ))}
+                {diaCerrado ? (
+                  <div className="pointer-events-none absolute inset-0 bg-slate-100/70" aria-hidden />
+                ) : (
+                  fuera.map(([from, to], i) => (
+                    <div
+                      key={`${fecha}-off-${i}`}
+                      className="pointer-events-none absolute right-0 left-0 bg-slate-100/60"
+                      style={{
+                        top: ((from - gridStartMin) / 60) * SLOT_PX,
+                        height: ((to - from) / 60) * SLOT_PX,
+                      }}
+                      aria-hidden
+                    />
+                  ))
+                )}
                 {dayTurnos.map((t) => {
                   const tipo = getTipoServicio(t.tipoServicioId);
                   const top = ((parseTimeToMinutes(t.horaInicio) - gridStartMin) / 60) * SLOT_PX;

@@ -11,6 +11,36 @@ CREATE TABLE sucursales (
   localidad TEXT
 );
 
+CREATE TABLE sucursal_horario_dia (
+  sucursal_id UUID NOT NULL REFERENCES sucursales (id) ON DELETE CASCADE,
+  dia_semana SMALLINT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7),
+  cerrado BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (sucursal_id, dia_semana)
+);
+
+CREATE TABLE sucursal_horario_tramo (
+  id UUID PRIMARY KEY,
+  sucursal_id UUID NOT NULL REFERENCES sucursales (id) ON DELETE CASCADE,
+  dia_semana SMALLINT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7),
+  orden INT NOT NULL,
+  hora_inicio TIME NOT NULL,
+  hora_fin TIME NOT NULL,
+  CHECK (hora_inicio < hora_fin)
+);
+
+CREATE INDEX sucursal_horario_tramo_suc_dia_idx ON sucursal_horario_tramo (sucursal_id, dia_semana);
+
+CREATE TABLE sucursal_cierres (
+  id UUID PRIMARY KEY,
+  sucursal_id UUID NOT NULL REFERENCES sucursales (id) ON DELETE CASCADE,
+  fecha_desde DATE NOT NULL,
+  fecha_hasta DATE NOT NULL,
+  motivo TEXT,
+  CHECK (fecha_desde <= fecha_hasta)
+);
+
+CREATE INDEX sucursal_cierres_sucursal_idx ON sucursal_cierres (sucursal_id, fecha_desde, fecha_hasta);
+
 -- usuarios.sucursal_id: sede home del staff; para rol cliente = sucursal de primera alta (ADR-0006).
 CREATE TABLE usuarios (
   id UUID PRIMARY KEY,

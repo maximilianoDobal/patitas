@@ -22,6 +22,9 @@ export default function PortalSolicitudesPage() {
     horaInicioPreferida: "09:00",
   });
   const [error, setError] = useState("");
+  const [fechaCerrada, setFechaCerrada] = useState(false);
+  const [slots, setSlots] = useState([]);
+  const [fechasCerradas, setFechasCerradas] = useState(new Set());
 
   async function load() {
     const [sRes, mRes, sucRes] = await Promise.all([
@@ -41,6 +44,60 @@ export default function PortalSolicitudesPage() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    if (!form.sucursalId) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    const hasta = new Date(`${hoy}T12:00:00`);
+    hasta.setDate(hasta.getDate() + 120);
+    const hastaIso = hasta.toISOString().slice(0, 10);
+    const qs = new URLSearchParams({
+      mode: "calendar",
+      sucursalId: form.sucursalId,
+      desde: hoy,
+      hasta: hastaIso,
+    });
+    fetch(`/api/portal/disponibilidad?${qs}`)
+      .then((r) => r.json())
+      .then((data) => setFechasCerradas(new Set(data.fechasCerradas || [])))
+      .catch(() => setFechasCerradas(new Set()));
+  }, [form.sucursalId]);
+
+  useEffect(() => {
+    if (!form.sucursalId || !form.fechaPreferida || !form.tipoServicioId) return;
+    const qs = new URLSearchParams({
+      sucursalId: form.sucursalId,
+      fecha: form.fechaPreferida,
+      tipoServicioId: form.tipoServicioId,
+    });
+    fetch(`/api/portal/disponibilidad?${qs}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          setFechaCerrada(true);
+          setSlots([]);
+          return;
+        }
+        setFechaCerrada(!data.abierto);
+        setSlots(data.slots || []);
+        if (data.slots?.length && !data.slots.includes(form.horaInicioPreferida)) {
+          setForm((f) => ({ ...f, horaInicioPreferida: data.slots[0] }));
+        }
+      })
+      .catch(() => {
+        setFechaCerrada(true);
+        setSlots([]);
+      });
+  }, [form.sucursalId, form.fechaPreferida, form.tipoServicioId]);
+
+  function onFechaChange(value) {
+    if (fechasCerradas.has(value)) {
+      setError("No hay disponibilidad en esa fecha.");
+      return;
+    }
+    setError("");
+    setForm((f) => ({ ...f, fechaPreferida: value }));
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -93,10 +150,30 @@ export default function PortalSolicitudesPage() {
               ))}
             </Select>
             <div className="grid grid-cols-2 gap-2">
-              <Input type="date" required value={form.fechaPreferida} onChange={(e) => setForm({ ...form, fechaPreferida: e.target.value })} />
-              <Input type="time" required value={form.horaInicioPreferida} onChange={(e) => setForm({ ...form, horaInicioPreferida: e.target.value })} />
+              <Input
+                type="date"
+                required
+                min={new Date().toISOString().slice(0, 10)}
+                value={form.fechaPreferida}
+                onChange={(e) => onFechaChange(e.target.value)}
+              />
+              <Select
+                required
+                value={form.horaInicioPreferida}
+                onChange={(e) => setForm({ ...form, horaInicioPreferida: e.target.value })}
+                disabled={!slots.length}
+              >
+                {slots.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </Select>
             </div>
-            <Button type="submit">Enviar solicitud</Button>
+            {fechaCerrada ? <p className="text-sm text-slate-500">No hay disponibilidad en la fecha seleccionada.</p> : null}
+            <Button type="submit" disabled={!slots.length || fechaCerrada}>
+              Enviar solicitud
+            </Button>
           </form>
         </CardContent>
       </Card>
