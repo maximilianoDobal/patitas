@@ -145,7 +145,7 @@ function buildSeedSql() {
 
   for (const t of turnos) {
     lines.push(
-      `INSERT INTO turnos (id, sucursal_id, mascota_id, tipo_servicio_id, veterinario_id, sala_id, fecha, hora_inicio, duracion_minutos, estado, notas_recepcion, creado_por) VALUES (${sqlUuid(t.id)}, ${sqlUuid(t.sucursalId)}, ${sqlUuid(t.mascotaId)}, ${sqlLiteral(t.tipoServicioId)}, ${sqlUuid(t.veterinarioId)}, ${sqlUuid(t.salaId)}, ${sqlLiteral(t.fecha)}, ${sqlLiteral(t.horaInicio)}, ${t.duracionMinutos}, ${sqlLiteral(t.estado)}, ${sqlLiteral(t.notasRecepcion ?? null)}, ${t.creadoPor ? sqlUuid(t.creadoPor) : "NULL"});`
+      `INSERT INTO turnos (id, sucursal_id, mascota_id, tipo_servicio_id, veterinario_id, sala_id, fecha, hora_inicio, duracion_minutos, estado, notas_recepcion, excepcion_agenda, categoria_excepcion_agenda, motivo_excepcion_agenda, creado_por) VALUES (${sqlUuid(t.id)}, ${sqlUuid(t.sucursalId)}, ${sqlUuid(t.mascotaId)}, ${sqlLiteral(t.tipoServicioId)}, ${sqlUuid(t.veterinarioId)}, ${sqlUuid(t.salaId)}, ${sqlLiteral(t.fecha)}, ${sqlLiteral(t.horaInicio)}, ${t.duracionMinutos}, ${sqlLiteral(t.estado)}, ${sqlLiteral(t.notasRecepcion ?? null)}, ${t.excepcionAgenda ? "TRUE" : "FALSE"}, ${sqlLiteral(t.categoriaExcepcionAgenda ?? null)}, ${sqlLiteral(t.motivoExcepcionAgenda ?? null)}, ${t.creadoPor ? sqlUuid(t.creadoPor) : "NULL"});`
     );
   }
 

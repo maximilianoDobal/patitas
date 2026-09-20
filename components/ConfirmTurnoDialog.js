@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { ExcepcionAgendaFields } from "@/components/ExcepcionAgendaFields";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 
 export function ConfirmTurnoDialog({ turno, salas, onConfirm, onCancel }) {
   const [salaId, setSalaId] = useState(turno.salaId);
+  const [excepcion, setExcepcion] = useState({
+    excepcionAgenda: turno.excepcionAgenda ?? false,
+    categoriaExcepcionAgenda: turno.categoriaExcepcionAgenda,
+    motivoExcepcionAgenda: turno.motivoExcepcionAgenda,
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
@@ -24,8 +30,13 @@ export function ConfirmTurnoDialog({ turno, salas, onConfirm, onCancel }) {
               ))}
             </Select>
           </label>
+          <ExcepcionAgendaFields compact value={excepcion} onChange={setExcepcion} />
           <div className="flex gap-2 pt-1">
-            <Button type="button" className="flex-1" onClick={() => onConfirm({ estado: "confirmado", salaId })}>
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => onConfirm({ estado: "confirmado", salaId, ...excepcion })}
+            >
               Confirmar
             </Button>
             <Button type="button" variant="secondary" className="flex-1" onClick={onCancel}>

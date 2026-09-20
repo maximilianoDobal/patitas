@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ExcepcionAgendaFields } from "@/components/ExcepcionAgendaFields";
 import { buildTimeSlots } from "@/lib/scheduling";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
@@ -13,6 +14,9 @@ export function ReprogramTurnoForm({ turno, catalog, onSave, onCancel }) {
     veterinarioId: turno.veterinarioId,
     salaId: turno.salaId,
     tipoServicioId: turno.tipoServicioId,
+    excepcionAgenda: turno.excepcionAgenda ?? false,
+    categoriaExcepcionAgenda: turno.categoriaExcepcionAgenda,
+    motivoExcepcionAgenda: turno.motivoExcepcionAgenda,
   });
 
   return (
@@ -92,6 +96,11 @@ export function ReprogramTurnoForm({ turno, catalog, onSave, onCancel }) {
               ))}
             </Select>
           </label>
+          <ExcepcionAgendaFields
+            compact
+            value={state}
+            onChange={(excepcion) => setState({ ...state, ...excepcion })}
+          />
           <div className="flex gap-2 pt-2">
             <Button type="submit" className="flex-1">
               Guardar

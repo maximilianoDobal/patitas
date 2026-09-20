@@ -2,7 +2,9 @@
 
 import clsx from "clsx";
 import { CLINICA_HORARIO, getTipoServicio } from "@/lib/constants";
+import { SolapadoBadge } from "@/components/ExcepcionAgendaFields";
 import { parseTimeToMinutes } from "@/lib/scheduling";
+import { layoutTurnosOverlapColumns } from "@/lib/turnoOverlapLayout";
 import { getTipoServicioHex } from "@/components/TipoServicioBadge";
 
 const SLOT_PX = 52;
@@ -27,7 +29,7 @@ export function weekRangeFromAnchor(anchorIso) {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 
-function TurnoCard({ turno, mascotaNombre, onClick }) {
+function TurnoCard({ turno, mascotaNombre, onClick, inOverlapCluster = false }) {
   const tipo = getTipoServicio(turno.tipoServicioId);
   const hex = getTipoServicioHex(turno.tipoServicioId);
   const isProgramado = turno.estado === "programado";
@@ -57,9 +59,12 @@ function TurnoCard({ turno, mascotaNombre, onClick }) {
       )}
       style={isProgramado ? undefined : { borderLeft: `3px solid ${hex}` }}
     >
-      <div className="mb-0.5 flex items-center justify-between">
+      <div className="mb-0.5 flex items-center justify-between gap-1">
         <span className="font-mono text-[10px] text-slate-500">{turno.horaInicio}</span>
-        {isProgramado ? <span className="text-[9px] font-bold text-amber-500">Programado</span> : null}
+        <span className="flex shrink-0 items-center gap-0.5">
+          <SolapadoBadge turno={turno} inCluster={inOverlapCluster} showMotivo={turno.excepcionAgenda} />
+          {isProgramado ? <span className="text-[9px] font-bold text-amber-500">Programado</span> : null}
+        </span>
       </div>
       <p className={clsx("truncate text-[11px] font-bold", tipo?.color.text)}>{mascotaNombre}</p>
     </button>
@@ -110,6 +115,7 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso }) 
           </div>
           {days.map((fecha) => {
             const dayTurnos = turnos.filter((t) => t.fecha === fecha);
+            const overlapLayout = layoutTurnosOverlapColumns(dayTurnos);
             return (
               <div key={fecha} className="relative border-r border-slate-100 bg-white last:border-r-0" style={{ height: gridHeight }}>
                 {hours.map((h) => (
@@ -124,13 +130,27 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso }) 
                   const top = ((parseTimeToMinutes(t.horaInicio) - gridStartMin) / 60) * SLOT_PX;
                   const height = ((t.duracionMinutos ?? tipo?.duracionMinutos ?? 30) / 60) * SLOT_PX;
                   const mascota = mascotasById.get(t.mascotaId);
+                  const placement = overlapLayout.get(t.id);
+                  const columnCount = placement?.columnCount ?? 1;
+                  const column = placement?.column ?? 0;
+                  const inOverlapCluster = columnCount > 1;
+                  const widthPct = 100 / columnCount;
                   return (
                     <div
                       key={t.id}
-                      className="absolute right-1 left-1"
-                      style={{ top, height: Math.max(height, 36) }}
+                      className="absolute px-0.5"
+                      style={{
+                        top,
+                        height: Math.max(height, 36),
+                        left: `${column * widthPct}%`,
+                        width: `${widthPct}%`,
+                      }}
                     >
-                      <TurnoCard turno={t} mascotaNombre={mascota?.nombre ?? "—"} />
+                      <TurnoCard
+                        turno={t}
+                        mascotaNombre={mascota?.nombre ?? "—"}
+                        inOverlapCluster={inOverlapCluster}
+                      />
                     </div>
                   );
                 })}

@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AgendaWeekGrid, weekRangeFromAnchor } from "@/components/AgendaWeekGrid";
 import { ConfirmTurnoDialog } from "@/components/ConfirmTurnoDialog";
 import { EstadoTurnoBadge } from "@/components/EstadoTurnoBadge";
+import { ExcepcionAgendaFields, SolapadoBadge } from "@/components/ExcepcionAgendaFields";
 import { ReprogramTurnoForm } from "@/components/ReprogramTurnoForm";
 import { TipoServicioBadge } from "@/components/TipoServicioBadge";
+import { groupTurnosByOverlap } from "@/lib/turnoOverlapLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
@@ -34,6 +36,9 @@ export default function AgendaPage() {
     veterinarioId: "",
     salaId: "",
     horaInicio: "09:00",
+    excepcionAgenda: false,
+    categoriaExcepcionAgenda: null,
+    motivoExcepcionAgenda: null,
   });
 
   const load = useCallback(async () => {
@@ -97,7 +102,14 @@ export default function AgendaPage() {
       setError(data.error || "No se pudo crear el turno");
       return;
     }
-    setForm((f) => ({ ...f, mascotaId: "", salaId: "" }));
+    setForm((f) => ({
+      ...f,
+      mascotaId: "",
+      salaId: "",
+      excepcionAgenda: false,
+      categoriaExcepcionAgenda: null,
+      motivoExcepcionAgenda: null,
+    }));
     loadTurnos();
     if (vista === "semana") loadWeekTurnos();
   }
@@ -123,6 +135,65 @@ export default function AgendaPage() {
   const isRecep = session?.rol === "recepcionista" || session?.rol === "administrador";
   const slots = buildTimeSlots();
   const today = todayIso();
+  const dayGroups = useMemo(() => groupTurnosByOverlap(turnos), [turnos]);
+
+  function renderTurnoActions(t) {
+    const terminal = ["cancelado", "atendido"].includes(t.estado);
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {isRecep && t.estado === "programado" ? (
+          <Button type="button" size="sm" variant="secondary" onClick={() => setConfirmTarget(t)}>
+            Confirmar
+          </Button>
+        ) : null}
+        {isRecep && !terminal && t.estado !== "no_asistio" ? (
+          <>
+            <Button type="button" size="sm" variant="outline" onClick={() => setReprogramTarget(t)}>
+              Reprogramar
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={() => patchTurno(t.id, { estado: "no_asistio" })}>
+              No asistió
+            </Button>
+            <Button type="button" size="sm" variant="destructive" onClick={() => patchTurno(t.id, { estado: "cancelado" })}>
+              Cancelar
+            </Button>
+          </>
+        ) : null}
+        {session?.rol === "veterinario" && t.estado === "confirmado" ? (
+          <Button type="button" size="sm" onClick={() => patchTurno(t.id, { estado: "en_atencion" })}>
+            En atención
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderTurnoRow(t) {
+    const m = mascotasById.get(t.mascotaId);
+    const vet = catalog?.veterinarios?.find((v) => v.id === t.veterinarioId);
+    const sala = catalog?.salas?.find((s) => s.id === t.salaId);
+    return (
+      <>
+        <td className="p-3 font-mono font-semibold text-slate-700">
+          <div className="flex items-center gap-2">
+            {t.horaInicio}
+            <SolapadoBadge turno={t} showMotivo={!!t.excepcionAgenda} />
+          </div>
+        </td>
+        <td className="p-3 font-medium text-slate-800">{m?.nombre ?? t.mascotaId}</td>
+        <td className="p-3">
+          <TipoServicioBadge tipoServicioId={t.tipoServicioId} />
+        </td>
+        <td className="p-3 text-slate-500">
+          {vet?.nombre} · {sala?.nombre}
+        </td>
+        <td className="p-3">
+          <EstadoTurnoBadge estado={t.estado} />
+        </td>
+        <td className="p-3">{renderTurnoActions(t)}</td>
+      </>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
@@ -233,6 +304,10 @@ export default function AgendaPage() {
                   </option>
                 ))}
               </Select>
+              <ExcepcionAgendaFields
+                value={form}
+                onChange={(excepcion) => setForm({ ...form, ...excepcion })}
+              />
               <Button type="submit" className="col-span-2 lg:col-span-2">
                 Crear turno
               </Button>
@@ -258,49 +333,46 @@ export default function AgendaPage() {
                 </tr>
               </thead>
               <tbody>
-                {turnos.map((t) => {
-                  const m = mascotasById.get(t.mascotaId);
-                  const vet = catalog?.veterinarios?.find((v) => v.id === t.veterinarioId);
-                  const sala = catalog?.salas?.find((s) => s.id === t.salaId);
-                  const terminal = ["cancelado", "atendido"].includes(t.estado);
+                {dayGroups.map((group) => {
+                  if (group.kind === "single") {
+                    const t = group.turno;
+                    return (
+                      <tr key={t.id} className="border-t border-slate-50 hover:bg-slate-50/50">
+                        {renderTurnoRow(t)}
+                      </tr>
+                    );
+                  }
                   return (
-                    <tr key={t.id} className="border-t border-slate-50 hover:bg-slate-50/50">
-                      <td className="p-3 font-mono font-semibold text-slate-700">{t.horaInicio}</td>
-                      <td className="p-3 font-medium text-slate-800">{m?.nombre ?? t.mascotaId}</td>
-                      <td className="p-3">
-                        <TipoServicioBadge tipoServicioId={t.tipoServicioId} />
-                      </td>
-                      <td className="p-3 text-slate-500">
-                        {vet?.nombre} · {sala?.nombre}
-                      </td>
-                      <td className="p-3">
-                        <EstadoTurnoBadge estado={t.estado} />
-                      </td>
-                      <td className="p-3">
-                        <div className="flex flex-wrap gap-1.5">
-                          {isRecep && t.estado === "programado" ? (
-                            <Button type="button" size="sm" variant="secondary" onClick={() => setConfirmTarget(t)}>
-                              Confirmar
-                            </Button>
-                          ) : null}
-                          {isRecep && !terminal && t.estado !== "no_asistio" ? (
-                            <>
-                              <Button type="button" size="sm" variant="outline" onClick={() => setReprogramTarget(t)}>
-                                Reprogramar
-                              </Button>
-                              <Button type="button" size="sm" variant="secondary" onClick={() => patchTurno(t.id, { estado: "no_asistio" })}>
-                                No asistió
-                              </Button>
-                              <Button type="button" size="sm" variant="destructive" onClick={() => patchTurno(t.id, { estado: "cancelado" })}>
-                                Cancelar
-                              </Button>
-                            </>
-                          ) : null}
-                          {session?.rol === "veterinario" && t.estado === "confirmado" ? (
-                            <Button type="button" size="sm" onClick={() => patchTurno(t.id, { estado: "en_atencion" })}>
-                              En atención
-                            </Button>
-                          ) : null}
+                    <tr key={group.turnos.map((t) => t.id).join("-")} className="border-t border-slate-50 hover:bg-slate-50/50">
+                      <td colSpan={6} className="p-3">
+                        <div className="flex flex-wrap gap-2">
+                          {group.turnos.map((t) => {
+                            const m = mascotasById.get(t.mascotaId);
+                            const vet = catalog?.veterinarios?.find((v) => v.id === t.veterinarioId);
+                            const sala = catalog?.salas?.find((s) => s.id === t.salaId);
+                            return (
+                              <div
+                                key={t.id}
+                                className="min-w-[220px] flex-1 rounded-xl border border-amber-200/80 bg-white p-3 shadow-sm"
+                              >
+                                <div className="mb-2 flex items-center justify-between gap-2">
+                                  <span className="font-mono text-sm font-bold text-slate-700">{t.horaInicio}</span>
+                                  <SolapadoBadge turno={t} inCluster showMotivo={!!t.excepcionAgenda} />
+                                </div>
+                                <p className="font-semibold text-slate-800">{m?.nombre ?? t.mascotaId}</p>
+                                <div className="mt-1">
+                                  <TipoServicioBadge tipoServicioId={t.tipoServicioId} />
+                                </div>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {vet?.nombre} · {sala?.nombre}
+                                </p>
+                                <div className="mt-2 flex items-center justify-between gap-2">
+                                  <EstadoTurnoBadge estado={t.estado} />
+                                  {renderTurnoActions(t)}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </td>
                     </tr>

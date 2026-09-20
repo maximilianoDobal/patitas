@@ -98,6 +98,9 @@ CREATE TABLE turnos (
   duracion_minutos INT NOT NULL,
   estado TEXT NOT NULL,
   notas_recepcion TEXT,
+  excepcion_agenda BOOLEAN NOT NULL DEFAULT FALSE,
+  categoria_excepcion_agenda TEXT,
+  motivo_excepcion_agenda TEXT,
   creado_por UUID REFERENCES usuarios (id)
 );
 
