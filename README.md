@@ -69,4 +69,17 @@ node scripts/write-fixture-hashes.mjs
 - RF1, RF3, RF7, RF2 básico, login recepcionista/veterinario, persistencia PostgreSQL.
 - Fixtures JSON en `data/fixtures/` alimentan **solo** el script `db:setup`, no el runtime.
 
+### Emails transaccionales de turno
+
+Alta, reprogramación, cancelación (al guardar turno) y **recordatorio ~24 h** vía cron:
+
+```bash
+curl -X POST "http://localhost:3000/api/cron/recordatorios-turnos" \
+  -H "Authorization: Bearer TU_CRON_SECRET"
+```
+
+Variables: `EMAILJS_*`, templates `EMAILJS_TEMPLATE_TURNO_*` (o un solo `EMAILJS_TEMPLATE_TURNO_ID`), `CRON_SECRET`. Sin EmailJS en dev se loguean params en consola.
+
+Tras cambios en `sql/schema.sql`, ejecutá `npm run db:setup`.
+
 Fuera del MVP: RF4 notificaciones masivas, facturación UI (tabla `comprobantes` preparada en SQL).

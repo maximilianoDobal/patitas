@@ -184,3 +184,17 @@ CREATE TABLE solicitudes_turno (
 );
 
 CREATE INDEX solicitudes_turno_sucursal_estado_idx ON solicitudes_turno (sucursal_id, estado);
+
+CREATE TABLE emails_turno_enviados (
+  id UUID PRIMARY KEY,
+  turno_id UUID NOT NULL REFERENCES turnos (id) ON DELETE CASCADE,
+  tipo TEXT NOT NULL CHECK (
+    tipo IN ('turno_agendado', 'turno_reprogramado', 'turno_cancelado', 'recordatorio_24h')
+  ),
+  enviado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX emails_turno_enviados_once_idx ON emails_turno_enviados (turno_id, tipo)
+  WHERE tipo IN ('turno_agendado', 'turno_cancelado', 'recordatorio_24h');
+
+CREATE INDEX emails_turno_enviados_turno_idx ON emails_turno_enviados (turno_id);

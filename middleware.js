@@ -18,6 +18,7 @@ function isPublicPath(pathname) {
   if (pathname === "/api/auth/login-admin") return true;
   if (pathname === "/api/auth/activacion") return true;
   if (pathname === "/api/auth/logout") return true;
+  if (pathname === "/api/cron/recordatorios-turnos") return true;
   return false;
 }
 
