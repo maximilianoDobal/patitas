@@ -78,8 +78,8 @@ curl -X POST "http://localhost:3000/api/cron/recordatorios-turnos" \
   -H "Authorization: Bearer TU_CRON_SECRET"
 ```
 
-Variables: `EMAILJS_*`, templates `EMAILJS_TEMPLATE_TURNO_*` (o un solo `EMAILJS_TEMPLATE_TURNO_ID`), `CRON_SECRET`. Sin EmailJS en dev se loguean params en consola.
+EmailJS (plan free, **2 templates**): `EMAILJS_TEMPLATE_ID` = activación portal; `EMAILJS_TEMPLATE_TURNO_ID` = agendado, reprogramado, cancelado y recordatorio (el backend manda `subject`, `titulo`, `mensaje`). `CRON_SECRET` para el cron. Sin EmailJS en dev se loguean params en consola.
 
-Tras cambios en `sql/schema.sql`, ejecutá `npm run db:setup`.
+Tras cambios en `sql/schema.sql`, ejecutá `npm run db:setup`. Si ya tenés datos y solo falta la tabla de mails de turno: `npm run db:patch-emails`.
 
 Fuera del MVP: RF4 notificaciones masivas, facturación UI (tabla `comprobantes` preparada en SQL).
