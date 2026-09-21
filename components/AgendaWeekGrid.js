@@ -12,6 +12,8 @@ import { getTipoServicioHex } from "@/components/TipoServicioBadge";
 export { weekRangeFromAnchor };
 
 const SLOT_PX = 52;
+/** Espacio superior/inferior para que etiquetas de hora y turnos a las 09:00 no se recorten. */
+const GRID_PAD = 14;
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function TurnoCard({ turno, mascotaNombre, onClick, inOverlapCluster = false }) {
@@ -56,7 +58,7 @@ function TurnoCard({ turno, mascotaNombre, onClick, inOverlapCluster = false }) 
   );
 }
 
-export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, semanaHorario }) {
+export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, semanaHorario, onTurnoSelect }) {
   const days = weekRangeFromAnchor(anchorFecha);
   const gridInicio = semanaHorario?.bounds?.inicio ?? CLINICA_HORARIO.inicio;
   const gridFin = semanaHorario?.bounds?.fin ?? CLINICA_HORARIO.fin;
@@ -64,10 +66,10 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, se
   for (let h = gridInicio; h < gridFin; h++) hours.push(h);
   const gridStartMin = gridInicio * 60;
   const gridEndMin = gridFin * 60;
-  const gridHeight = (gridFin - gridInicio) * SLOT_PX;
+  const gridHeight = GRID_PAD * 2 + (gridFin - gridInicio) * SLOT_PX;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
       <div className="grid min-w-[920px] grid-cols-[56px_repeat(7,1fr)] border-b border-slate-100 bg-slate-50/60">
         <div />
         {days.map((fecha, idx) => {
@@ -88,14 +90,14 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, se
           );
         })}
       </div>
-      <div className="min-w-[920px] overflow-x-auto">
+      <div className="min-w-[920px]">
         <div className="grid grid-cols-[56px_repeat(7,1fr)]">
           <div className="relative border-r border-slate-100" style={{ height: gridHeight }}>
             {hours.map((h) => (
               <div
                 key={h}
-                className="absolute right-0 left-0 pr-1 text-right text-[10px] text-slate-400"
-                style={{ top: (h - gridInicio) * SLOT_PX - 6 }}
+                className="absolute right-0 left-0 pr-1 text-right text-[10px] leading-none text-slate-400"
+                style={{ top: GRID_PAD + (h - gridInicio) * SLOT_PX + 2 }}
               >
                 {String(h).padStart(2, "0")}:00
               </div>
@@ -116,7 +118,7 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, se
                   <div
                     key={h}
                     className="absolute right-0 left-0 border-t border-slate-100"
-                    style={{ top: (h - gridInicio) * SLOT_PX }}
+                    style={{ top: GRID_PAD + (h - gridInicio) * SLOT_PX }}
                   />
                 ))}
                 {diaCerrado ? (
@@ -127,7 +129,7 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, se
                       key={`${fecha}-off-${i}`}
                       className="pointer-events-none absolute right-0 left-0 bg-slate-100/60"
                       style={{
-                        top: ((from - gridStartMin) / 60) * SLOT_PX,
+                        top: GRID_PAD + ((from - gridStartMin) / 60) * SLOT_PX,
                         height: ((to - from) / 60) * SLOT_PX,
                       }}
                       aria-hidden
@@ -136,7 +138,7 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, se
                 )}
                 {dayTurnos.map((t) => {
                   const tipo = getTipoServicio(t.tipoServicioId);
-                  const top = ((parseTimeToMinutes(t.horaInicio) - gridStartMin) / 60) * SLOT_PX;
+                  const top = GRID_PAD + ((parseTimeToMinutes(t.horaInicio) - gridStartMin) / 60) * SLOT_PX;
                   const height = ((t.duracionMinutos ?? tipo?.duracionMinutos ?? 30) / 60) * SLOT_PX;
                   const mascota = mascotasById.get(t.mascotaId);
                   const placement = overlapLayout.get(t.id);
@@ -159,6 +161,7 @@ export function AgendaWeekGrid({ anchorFecha, turnos, mascotasById, todayIso, se
                         turno={t}
                         mascotaNombre={mascota?.nombre ?? "—"}
                         inOverlapCluster={inOverlapCluster}
+                        onClick={() => onTurnoSelect?.(t)}
                       />
                     </div>
                   );

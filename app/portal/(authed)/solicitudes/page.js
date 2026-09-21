@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
 import { TIPOS_SERVICIO } from "@/lib/constants";
+import { portalCardMeta, portalCardText, portalError, portalPageTitle } from "@/lib/portalUi";
 
 function tipoNombre(id) {
   return TIPOS_SERVICIO.find((t) => t.id === id)?.nombre ?? id;
@@ -117,15 +118,15 @@ export default function PortalSolicitudesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-slate-800">Solicitudes de turno</h1>
+      <h1 className={portalPageTitle}>Solicitudes de turno</h1>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nueva solicitud</CardTitle>
+          <CardTitle className="text-xl font-bold text-slate-900">Nueva solicitud</CardTitle>
         </CardHeader>
         <CardContent>
-          {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
-          <form onSubmit={onSubmit} className="grid gap-3">
-            <Select value={form.mascotaId} onChange={(e) => setForm({ ...form, mascotaId: e.target.value })} required>
+          {error ? <p className={`mb-4 ${portalError}`}>{error}</p> : null}
+          <form onSubmit={onSubmit} className="grid gap-4">
+            <Select surface="portal" value={form.mascotaId} onChange={(e) => setForm({ ...form, mascotaId: e.target.value })} required>
               {mascotas.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.nombre}
@@ -133,6 +134,7 @@ export default function PortalSolicitudesPage() {
               ))}
             </Select>
             <Select
+              surface="portal"
               value={form.tipoServicioId}
               onChange={(e) => setForm({ ...form, tipoServicioId: e.target.value })}
             >
@@ -142,15 +144,16 @@ export default function PortalSolicitudesPage() {
                 </option>
               ))}
             </Select>
-            <Select value={form.sucursalId} onChange={(e) => setForm({ ...form, sucursalId: e.target.value })} required>
+            <Select surface="portal" value={form.sucursalId} onChange={(e) => setForm({ ...form, sucursalId: e.target.value })} required>
               {sucursales.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.codigoInterno} — {s.nombreComercial}
                 </option>
               ))}
             </Select>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
+                surface="portal"
                 type="date"
                 required
                 min={new Date().toISOString().slice(0, 10)}
@@ -158,6 +161,7 @@ export default function PortalSolicitudesPage() {
                 onChange={(e) => onFechaChange(e.target.value)}
               />
               <Select
+                surface="portal"
                 required
                 value={form.horaInicioPreferida}
                 onChange={(e) => setForm({ ...form, horaInicioPreferida: e.target.value })}
@@ -170,8 +174,8 @@ export default function PortalSolicitudesPage() {
                 ))}
               </Select>
             </div>
-            {fechaCerrada ? <p className="text-sm text-slate-500">No hay disponibilidad en la fecha seleccionada.</p> : null}
-            <Button type="submit" disabled={!slots.length || fechaCerrada}>
+            {fechaCerrada ? <p className="text-base text-slate-600">No hay disponibilidad en la fecha seleccionada.</p> : null}
+            <Button type="submit" size="portal" disabled={!slots.length || fechaCerrada} className="w-full sm:w-auto">
               Enviar solicitud
             </Button>
           </form>
@@ -180,11 +184,11 @@ export default function PortalSolicitudesPage() {
       <div className="space-y-2">
         {solicitudes.map((s) => (
           <Card key={s.id}>
-            <CardContent className="py-3 text-sm">
-              <p className="font-medium text-slate-800">
+            <CardContent className="py-4">
+              <p className={`font-semibold ${portalCardText}`}>
                 {tipoNombre(s.tipoServicioId)} · {s.fechaPreferida} {s.horaInicioPreferida}
               </p>
-              <p className="text-slate-500 capitalize">
+              <p className={`${portalCardMeta} capitalize`}>
                 Estado: {s.estado}
                 {s.motivoRechazo ? ` — ${s.motivoRechazo}` : ""}
               </p>

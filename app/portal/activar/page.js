@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { portalError, portalLabel, portalPageTitle } from "@/lib/portalUi";
 
 function ActivarForm() {
   const router = useRouter();
@@ -39,21 +40,21 @@ function ActivarForm() {
   }
 
   if (!token) {
-    return <p className="text-sm text-red-600">Enlace inválido. Solicite uno nuevo desde el ingreso al portal.</p>;
+    return <p className={portalError}>Enlace inválido. Solicite uno nuevo desde el ingreso al portal.</p>;
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <label className="block text-sm font-medium text-slate-700">
+    <form onSubmit={onSubmit} className="space-y-5">
+      {error ? <p className={portalError}>{error}</p> : null}
+      <label className={portalLabel}>
         Nueva contraseña
-        <Input type="password" className="mt-1.5" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
+        <Input surface="portal" type="password" className="mt-2" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
       </label>
-      <label className="block text-sm font-medium text-slate-700">
+      <label className={portalLabel}>
         Confirmar contraseña
-        <Input type="password" className="mt-1.5" value={confirm} onChange={(e) => setConfirm(e.target.value)} minLength={6} required />
+        <Input surface="portal" type="password" className="mt-2" value={confirm} onChange={(e) => setConfirm(e.target.value)} minLength={6} required />
       </label>
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" size="portal" disabled={loading} className="w-full">
         {loading ? "Guardando…" : "Activar portal"}
       </Button>
     </form>
@@ -64,9 +65,9 @@ export default function PortalActivarPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          <h1 className="mb-4 text-lg font-bold text-slate-800">Activar cuenta portal</h1>
-          <Suspense fallback={<p className="text-sm text-slate-500">Cargando…</p>}>
+        <CardContent className="pt-8">
+          <h1 className={`mb-6 ${portalPageTitle}`}>Activar cuenta portal</h1>
+          <Suspense fallback={<p className="text-base text-slate-600">Cargando…</p>}>
             <ActivarForm />
           </Suspense>
         </CardContent>

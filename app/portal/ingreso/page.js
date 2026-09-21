@@ -6,6 +6,7 @@ import { PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { portalError, portalLabel, portalLead, portalSuccess } from "@/lib/portalUi";
 
 export default function PortalIngresoPage() {
   const router = useRouter();
@@ -57,51 +58,49 @@ export default function PortalIngresoPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <Card className="w-full max-w-md overflow-hidden">
-        <div className="h-1.5 w-full bg-brand" />
-        <CardContent className="pt-6">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand shadow-sm">
-              <PawPrint size={22} className="text-white" />
+        <div className="h-2 w-full bg-brand" />
+        <CardContent className="pt-8">
+          <div className="mb-8 flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-brand shadow-sm">
+              <PawPrint size={28} className="text-white" />
             </div>
             <div>
-              <p className="text-lg font-bold text-slate-800">Portal de clientes</p>
-              <p className="text-sm text-slate-500">Patitas</p>
+              <p className="text-2xl font-bold text-slate-900">Portal de clientes</p>
+              <p className={portalLead}>Patitas</p>
             </div>
           </div>
-          <div className="mb-4 flex gap-2">
-            <Button type="button" variant={tab === "login" ? "default" : "outline"} size="sm" onClick={() => setTab("login")}>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+            <Button type="button" variant={tab === "login" ? "default" : "outline"} size="portal" className="flex-1" onClick={() => setTab("login")}>
               Ingresar
             </Button>
-            <Button type="button" variant={tab === "activar" ? "default" : "outline"} size="sm" onClick={() => setTab("activar")}>
+            <Button type="button" variant={tab === "activar" ? "default" : "outline"} size="portal" className="flex-1" onClick={() => setTab("activar")}>
               Activar cuenta
             </Button>
           </div>
-          {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
-          {message ? <p className="mb-3 text-sm text-emerald-700">{message}</p> : null}
+          {error ? <p className={`mb-4 ${portalError}`}>{error}</p> : null}
+          {message ? <p className={`mb-4 ${portalSuccess}`}>{message}</p> : null}
           {tab === "login" ? (
-            <form onSubmit={onLogin} className="space-y-4">
-              <label className="block text-sm font-medium text-slate-700">
+            <form onSubmit={onLogin} className="space-y-5">
+              <label className={portalLabel}>
                 Email
-                <Input className="mt-1.5" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
+                <Input surface="portal" className="mt-2" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
               </label>
-              <label className="block text-sm font-medium text-slate-700">
+              <label className={portalLabel}>
                 Contraseña
-                <Input type="password" className="mt-1.5" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+                <Input surface="portal" type="password" className="mt-2" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
               </label>
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button type="submit" size="portal" disabled={loading} className="w-full">
                 {loading ? "Ingresando…" : "Ingresar al portal"}
               </Button>
             </form>
           ) : (
-            <form onSubmit={onActivacion} className="space-y-4">
-              <p className="text-sm text-slate-500">
-                Si su email está registrado en la clínica, recibirá un enlace para elegir su contraseña.
-              </p>
-              <label className="block text-sm font-medium text-slate-700">
+            <form onSubmit={onActivacion} className="space-y-5">
+              <p className={portalLead}>Si su email está registrado en la clínica, recibirá un enlace para elegir su contraseña.</p>
+              <label className={portalLabel}>
                 Email
-                <Input className="mt-1.5" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input surface="portal" className="mt-2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </label>
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button type="submit" size="portal" disabled={loading} className="w-full">
                 {loading ? "Enviando…" : "Enviar link de activación"}
               </Button>
             </form>

@@ -82,4 +82,14 @@ EmailJS (plan free, **2 templates**): `EMAILJS_TEMPLATE_ID` = activación portal
 
 Tras cambios en `sql/schema.sql`, ejecutá `npm run db:setup`. Si ya tenés datos y solo falta la tabla de mails de turno: `npm run db:patch-emails`.
 
+### RNF5 — responsividad y portal accesible
+
+| Ámbito | Estado | Detalle |
+|--------|--------|---------|
+| Staff desktop | Cumple | Sidebar + densidad operativa |
+| Staff móvil | Cumple | Menú inferior por rol; agenda en cards en pantalla estrecha |
+| Portal accesible | Cumple | Tipografía ≥18px, controles ≥44px, barra inferior en móvil |
+
+Criterios y checklist de capturas: [`docs/rnf5-portal.md`](docs/rnf5-portal.md). Glosario: **Interfaz accesible del portal** en `CONTEXT.md`.
+
 Fuera del MVP: RF4 notificaciones masivas, facturación UI (tabla `comprobantes` preparada en SQL).

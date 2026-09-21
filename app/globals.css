@@ -35,3 +35,9 @@ body {
   font-size: var(--font-size);
   font-family: var(--font-sans);
 }
+
+.portal-surface {
+  --portal-font-size: 1.125rem;
+  font-size: var(--portal-font-size);
+  line-height: 1.5;
+}

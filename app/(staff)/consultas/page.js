@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TipoServicioBadge } from "@/components/TipoServicioBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,17 +21,52 @@ export default function ConsultasPage() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
 
-  useEffect(() => {
-    async function load() {
-      const fecha = new Date().toISOString().slice(0, 10);
-      const [tRes, cRes] = await Promise.all([fetch(`/api/turnos?fecha=${fecha}`), fetch("/api/catalog")]);
-      setTurnos((await tRes.json()).turnos || []);
-      setCatalog(await cRes.json());
-    }
-    load();
+  const load = useCallback(async () => {
+    const fecha = new Date().toISOString().slice(0, 10);
+    const [tRes, cRes] = await Promise.all([fetch(`/api/turnos?fecha=${fecha}`), fetch("/api/catalog")]);
+    const nextTurnos = (await tRes.json()).turnos || [];
+    setTurnos(nextTurnos);
+    setCatalog(await cRes.json());
+    setSelected((prev) => {
+      if (!prev) return null;
+      return nextTurnos.find((t) => t.id === prev.id) ?? null;
+    });
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const mascotasById = Object.fromEntries((catalog?.mascotas || []).map((m) => [m.id, m]));
+
+  async function patchEstado(turnoId, estado) {
+    setError("");
+    const res = await fetch(`/api/turnos/${turnoId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "No se pudo actualizar el turno");
+      return;
+    }
+    await load();
+  }
+
+  function openTurno(t) {
+    setSelected(t);
+    setForm({
+      titulo: "",
+      motivo: "",
+      diagnostico: "",
+      tratamiento: "",
+      pesoKg: "",
+      evolucion: "",
+    });
+    setOk("");
+    setError("");
+  }
 
   async function guardar(e) {
     e.preventDefault();
@@ -54,6 +89,7 @@ export default function ConsultasPage() {
     }
     setOk("Consulta guardada y turno marcado como atendido.");
     setSelected(null);
+    load();
   }
 
   const pendientes = turnos.filter((t) => ["confirmado", "en_atencion"].includes(t.estado));
@@ -67,19 +103,26 @@ export default function ConsultasPage() {
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {ok ? <p className="text-sm font-medium text-emerald-700">{ok}</p> : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="divide-y divide-slate-50 p-0">
           {pendientes.map((t) => (
-            <div key={t.id} className="flex items-center justify-between gap-2 px-5 py-4">
+            <div key={t.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-semibold text-slate-800">
                   {mascotasById[t.mascotaId]?.nombre} — {t.horaInicio}
                 </p>
                 <TipoServicioBadge tipoServicioId={t.tipoServicioId} />
               </div>
-              <Button type="button" size="sm" variant="secondary" onClick={() => setSelected(t)}>
-                Atender
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {t.estado === "confirmado" ? (
+                  <Button type="button" size="sm" variant="outline" className="min-h-[44px] sm:min-h-0" onClick={() => patchEstado(t.id, "en_atencion")}>
+                    En atención
+                  </Button>
+                ) : null}
+                <Button type="button" size="sm" variant="secondary" className="min-h-[44px] sm:min-h-0" onClick={() => openTurno(t)}>
+                  Atender
+                </Button>
+              </div>
             </div>
           ))}
           {pendientes.length === 0 ? (
@@ -106,7 +149,7 @@ export default function ConsultasPage() {
                   onChange={(e) => setForm({ ...form, evolucion: e.target.value })}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-brand/25 focus-visible:outline-none"
                 />
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="min-h-[44px] w-full">
                   Guardar consulta
                 </Button>
               </form>

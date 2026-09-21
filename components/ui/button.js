@@ -17,6 +17,7 @@ export const buttonVariants = cva(
         default: "h-10 px-4 py-2",
         sm: "h-8 px-3 text-xs rounded-lg",
         lg: "h-11 px-6",
+        portal: "h-11 min-h-[44px] px-5 text-base rounded-xl",
       },
     },
     defaultVariants: {

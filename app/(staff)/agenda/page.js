@@ -7,6 +7,7 @@ import { EstadoTurnoBadge } from "@/components/EstadoTurnoBadge";
 import { ExcepcionAgendaFields, SolapadoBadge } from "@/components/ExcepcionAgendaFields";
 import { ReprogramTurnoForm } from "@/components/ReprogramTurnoForm";
 import { TipoServicioBadge } from "@/components/TipoServicioBadge";
+import { TurnoDetalleDialog } from "@/components/TurnoDetalleDialog";
 import { groupTurnosByOverlap } from "@/lib/turnoOverlapLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ export default function AgendaPage() {
   const [error, setError] = useState("");
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [reprogramTarget, setReprogramTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
   const [daySlots, setDaySlots] = useState([]);
   const [fechaCerrada, setFechaCerrada] = useState(false);
   const [semanaHorario, setSemanaHorario] = useState(null);
@@ -160,6 +162,7 @@ export default function AgendaPage() {
     }
     setConfirmTarget(null);
     setReprogramTarget(null);
+    setDetailTarget(null);
     loadTurnos();
     if (vista === "semana") loadWeekTurnos();
   }
@@ -168,18 +171,42 @@ export default function AgendaPage() {
   const today = todayIso();
   const dayGroups = useMemo(() => groupTurnosByOverlap(turnos), [turnos]);
 
+  function turnoContext(t) {
+    const mascota = mascotasById.get(t.mascotaId);
+    const cliente = mascota ? clientesById.get(mascota.clienteId) : null;
+    const veterinario = catalog?.veterinarios?.find((v) => v.id === t.veterinarioId);
+    const sala = catalog?.salas?.find((s) => s.id === t.salaId);
+    return { mascota, cliente, veterinario, sala };
+  }
+
   function renderTurnoActions(t) {
     const terminal = ["cancelado", "atendido"].includes(t.estado);
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
         {isRecep && t.estado === "programado" ? (
-          <Button type="button" size="sm" variant="secondary" onClick={() => setConfirmTarget(t)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setDetailTarget(null);
+              setConfirmTarget(t);
+            }}
+          >
             Confirmar
           </Button>
         ) : null}
         {isRecep && !terminal && t.estado !== "no_asistio" ? (
           <>
-            <Button type="button" size="sm" variant="outline" onClick={() => setReprogramTarget(t)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setDetailTarget(null);
+                setReprogramTarget(t);
+              }}
+            >
               Reprogramar
             </Button>
             <Button type="button" size="sm" variant="secondary" onClick={() => patchTurno(t.id, { estado: "no_asistio" })}>
@@ -191,11 +218,38 @@ export default function AgendaPage() {
           </>
         ) : null}
         {session?.rol === "veterinario" && t.estado === "confirmado" ? (
-          <Button type="button" size="sm" onClick={() => patchTurno(t.id, { estado: "en_atencion" })}>
+          <Button type="button" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => patchTurno(t.id, { estado: "en_atencion" })}>
             En atención
           </Button>
         ) : null}
       </div>
+    );
+  }
+
+  function renderTurnoCard(t) {
+    const m = mascotasById.get(t.mascotaId);
+    const vet = catalog?.veterinarios?.find((v) => v.id === t.veterinarioId);
+    const sala = catalog?.salas?.find((s) => s.id === t.salaId);
+    return (
+      <button
+        key={t.id}
+        type="button"
+        onClick={() => setDetailTarget(t)}
+        className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-brand/30 hover:bg-brand/5"
+      >
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="font-mono text-base font-bold text-slate-800">{t.horaInicio}</span>
+          <EstadoTurnoBadge estado={t.estado} />
+        </div>
+        <p className="font-semibold text-slate-800">{m?.nombre ?? t.mascotaId}</p>
+        <div className="mt-2">
+          <TipoServicioBadge tipoServicioId={t.tipoServicioId} />
+        </div>
+        <p className="mt-2 text-sm text-slate-500">
+          {vet?.nombre} · {sala?.nombre}
+        </p>
+        <p className="mt-2 text-xs font-medium text-brand">Ver detalle</p>
+      </button>
     );
   }
 
@@ -362,9 +416,20 @@ export default function AgendaPage() {
           mascotasById={mascotasById}
           todayIso={today}
           semanaHorario={semanaHorario}
+          onTurnoSelect={setDetailTarget}
         />
       ) : (
-        <Card className="overflow-hidden p-0">
+        <>
+        <div className="space-y-3 md:hidden">
+          {turnos.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-slate-400">
+              Sin turnos para esta fecha y filtros.
+            </p>
+          ) : (
+            turnos.map((t) => renderTurnoCard(t))
+          )}
+        </div>
+        <Card className="hidden overflow-hidden p-0 md:block">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-slate-100 bg-slate-50/80 text-left">
@@ -382,7 +447,11 @@ export default function AgendaPage() {
                   if (group.kind === "single") {
                     const t = group.turno;
                     return (
-                      <tr key={t.id} className="border-t border-slate-50 hover:bg-slate-50/50">
+                      <tr
+                        key={t.id}
+                        className="cursor-pointer border-t border-slate-50 hover:bg-slate-50/50"
+                        onClick={() => setDetailTarget(t)}
+                      >
                         {renderTurnoRow(t)}
                       </tr>
                     );
@@ -398,7 +467,16 @@ export default function AgendaPage() {
                             return (
                               <div
                                 key={t.id}
-                                className="min-w-[220px] flex-1 rounded-xl border border-amber-200/80 bg-white p-3 shadow-sm"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => setDetailTarget(t)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setDetailTarget(t);
+                                  }
+                                }}
+                                className="min-w-[220px] flex-1 cursor-pointer rounded-xl border border-amber-200/80 bg-white p-3 text-left shadow-sm transition-colors hover:border-brand/40"
                               >
                                 <div className="mb-2 flex items-center justify-between gap-2">
                                   <span className="font-mono text-sm font-bold text-slate-700">{t.horaInicio}</span>
@@ -434,7 +512,17 @@ export default function AgendaPage() {
             </table>
           </div>
         </Card>
+        </>
       )}
+
+      {detailTarget && catalog ? (
+        <TurnoDetalleDialog
+          turno={detailTarget}
+          {...turnoContext(detailTarget)}
+          onClose={() => setDetailTarget(null)}
+          actions={renderTurnoActions(detailTarget)}
+        />
+      ) : null}
 
       {confirmTarget && catalog ? (
         <ConfirmTurnoDialog

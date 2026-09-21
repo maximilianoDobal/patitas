@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { portalCardMeta, portalCardText, portalLead, portalPageTitle } from "@/lib/portalUi";
 
 export default function PortalMascotasPage() {
   const [mascotas, setMascotas] = useState([]);
@@ -14,16 +15,16 @@ export default function PortalMascotasPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-slate-800">Mis mascotas</h1>
-      <p className="text-sm text-slate-500">Solo lectura — para pedir turnos usá Solicitudes.</p>
+      <h1 className={portalPageTitle}>Mis mascotas</h1>
+      <p className={portalLead}>Solo lectura — para pedir turnos usá Solicitudes.</p>
       {mascotas.length === 0 ? (
-        <p className="text-sm text-slate-500">No hay mascotas registradas.</p>
+        <p className={portalLead}>No hay mascotas registradas.</p>
       ) : (
         mascotas.map((m) => (
           <Card key={m.id}>
-            <CardContent className="py-4">
-              <p className="font-semibold text-slate-800">{m.nombre}</p>
-              <p className="text-sm text-slate-500">
+            <CardContent className="py-5">
+              <p className={`font-semibold ${portalCardText}`}>{m.nombre}</p>
+              <p className={portalCardMeta}>
                 {m.especie}
                 {m.raza ? ` · ${m.raza}` : ""}
               </p>
