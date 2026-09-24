@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -8,6 +8,13 @@ import { Calendar, ClipboardList, FileText, LogOut, PawPrint, Settings, Users } 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { isRolOperativo } from "@/lib/constants";
+import {
+  formatSolicitudesBadgeCount,
+  shouldHideSolicitudesNavBadge,
+  solicitudesNavAriaLabel,
+} from "@/lib/solicitudesNavBadge";
+
+const SOLICITUDES_POLL_MS = 60 * 60 * 1000;
 
 const NAV = [
   { href: "/agenda", label: "Agenda", shortLabel: "Agenda", Icon: Calendar, roles: ["recepcionista", "veterinario", "administrador"] },
@@ -27,8 +34,34 @@ function initials(nombre) {
     .toUpperCase();
 }
 
-function StaffNavLink({ href, label, shortLabel, Icon, active, layout }) {
+function SolicitudesNavBadgeWithDot({ count, compact }) {
+  const badge = formatSolicitudesBadgeCount(count);
+  if (!badge) return null;
+  return (
+    <>
+      <span
+        className={clsx(
+          "pointer-events-none absolute flex items-center justify-center rounded-full bg-amber-500 ring-2 ring-white",
+          badge.showNumber
+            ? clsx(
+                "font-bold text-white",
+                compact
+                  ? "min-h-[14px] min-w-[14px] -right-1.5 -top-1 px-0.5 text-[9px]"
+                  : "-right-1 -top-1 min-h-4 min-w-4 px-0.5 text-[10px]"
+              )
+            : clsx("h-2 w-2", "-right-0.5 -top-0.5")
+        )}
+        aria-hidden
+      >
+        {badge.showNumber ? badge.display : null}
+      </span>
+    </>
+  );
+}
+
+function StaffNavLink({ href, label, shortLabel, Icon, active, layout, solicitudesBadge }) {
   const compact = layout === "mobile";
+  const ariaLabel = solicitudesBadge != null ? solicitudesNavAriaLabel(solicitudesBadge) : undefined;
   return (
     <Link
       href={href}
@@ -45,17 +78,93 @@ function StaffNavLink({ href, label, shortLabel, Icon, active, layout }) {
             )
       )}
       aria-current={active ? "page" : undefined}
+      aria-label={ariaLabel}
     >
-      <Icon size={compact ? 20 : 16} className={active ? "text-brand" : compact ? "text-slate-400" : "text-slate-400"} />
+      <span className="relative shrink-0">
+        <Icon size={compact ? 20 : 16} className={active ? "text-brand" : compact ? "text-slate-400" : "text-slate-400"} />
+        {solicitudesBadge != null && solicitudesBadge > 0 ? (
+          <SolicitudesNavBadgeWithDot count={solicitudesBadge} compact={compact} />
+        ) : null}
+      </span>
       <span className={compact ? "leading-tight" : "flex-1 text-left"}>{compact ? shortLabel ?? label : label}</span>
       {!compact && active ? <div className="h-1.5 w-1.5 rounded-full bg-brand" /> : null}
     </Link>
   );
 }
 
+function useSolicitudesPendientesCount(session, pathname) {
+  const canFetch = isRolOperativo(session.rol);
+  const [count, setCount] = useState(null);
+
+  const fetchCount = useCallback(async () => {
+    if (!canFetch) return;
+    try {
+      const res = await fetch("/api/solicitudes/pendientes-count");
+      if (!res.ok) return;
+      const data = await res.json();
+      setCount(typeof data.count === "number" ? data.count : 0);
+    } catch {
+      /* mantener último valor */
+    }
+  }, [canFetch]);
+
+  useEffect(() => {
+    fetchCount();
+  }, [fetchCount, pathname, session.sucursalId]);
+
+  useEffect(() => {
+    if (!canFetch) return undefined;
+
+    let intervalId;
+
+    function clearPoll() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+      }
+    }
+
+    function startPollIfVisible() {
+      clearPoll();
+      if (document.visibilityState !== "visible") return;
+      intervalId = setInterval(() => {
+        if (document.visibilityState === "visible") fetchCount();
+      }, SOLICITUDES_POLL_MS);
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        fetchCount();
+        startPollIfVisible();
+      } else {
+        clearPoll();
+      }
+    }
+
+    function onWindowFocus() {
+      fetchCount();
+    }
+
+    startPollIfVisible();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", onWindowFocus);
+    return () => {
+      clearPoll();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", onWindowFocus);
+    };
+  }, [canFetch, fetchCount]);
+
+  return count;
+}
+
 export function StaffShell({ session, sucursal, sucursales = [], children }) {
   const pathname = usePathname();
   const router = useRouter();
+  const solicitudesPendientes = useSolicitudesPendientesCount(session, pathname);
+  const hideSolicitudesBadge = shouldHideSolicitudesNavBadge(pathname);
+  const solicitudesBadgeValue =
+    solicitudesPendientes != null && !hideSolicitudesBadge ? solicitudesPendientes : null;
   const items = NAV.filter((n) => n.roles.includes(session.rol));
   const canSwitchSucursal = isRolOperativo(session.rol) && sucursales.length > 1;
   const [switchError, setSwitchError] = useState("");
@@ -85,6 +194,14 @@ export function StaffShell({ session, sucursal, sucursales = [], children }) {
 
   function isActive(href) {
     return pathname === href || (href === "/admin" && pathname.startsWith("/admin"));
+  }
+
+  function navLinkProps(item) {
+    const base = { ...item, active: isActive(item.href) };
+    if (item.href === "/solicitudes") {
+      return { ...base, solicitudesBadge: solicitudesBadgeValue };
+    }
+    return base;
   }
 
   const sucursalControl = canSwitchSucursal ? (
@@ -142,7 +259,7 @@ export function StaffShell({ session, sucursal, sucursales = [], children }) {
             <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-widest text-slate-400">Menú principal</p>
             <div className="space-y-0.5">
               {items.map((item) => (
-                <StaffNavLink key={item.href} {...item} active={isActive(item.href)} layout="sidebar" />
+                <StaffNavLink key={item.href} {...navLinkProps(item)} layout="sidebar" />
               ))}
             </div>
           </nav>
@@ -166,7 +283,7 @@ export function StaffShell({ session, sucursal, sucursales = [], children }) {
           style={{ gridTemplateColumns: `repeat(${mobileNavCols}, minmax(0, 1fr))` }}
         >
           {items.map((item) => (
-            <StaffNavLink key={item.href} {...item} active={isActive(item.href)} layout="mobile" />
+            <StaffNavLink key={item.href} {...navLinkProps(item)} layout="mobile" />
           ))}
         </div>
       </nav>

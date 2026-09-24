@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RechazarSolicitudDialog } from "@/components/RechazarSolicitudDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select } from "@/components/ui/input";
@@ -16,6 +17,8 @@ export default function SolicitudesStaffPage() {
   const [confirmando, setConfirmando] = useState(null);
   const [propuesta, setPropuesta] = useState(null);
   const [override, setOverride] = useState({ veterinarioId: "", salaId: "" });
+  const [rechazandoId, setRechazandoId] = useState(null);
+  const [rechazandoSubmit, setRechazandoSubmit] = useState(false);
 
   async function load() {
     const res = await fetch("/api/solicitudes");
@@ -62,18 +65,27 @@ export default function SolicitudesStaffPage() {
     load();
   }
 
-  async function rechazar(id) {
-    const motivo = window.prompt("Motivo de rechazo (opcional):") ?? "";
-    const res = await fetch(`/api/solicitudes/${id}/rechazar`, {
+  function abrirRechazar(id) {
+    setError("");
+    setRechazandoId(id);
+  }
+
+  async function confirmarRechazo(motivo) {
+    if (!rechazandoId) return;
+    setError("");
+    setRechazandoSubmit(true);
+    const res = await fetch(`/api/solicitudes/${rechazandoId}/rechazar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ motivo }),
     });
+    setRechazandoSubmit(false);
     if (!res.ok) {
       const data = await res.json();
       setError(data.error || "Error al rechazar");
       return;
     }
+    setRechazandoId(null);
     load();
   }
 
@@ -111,7 +123,7 @@ export default function SolicitudesStaffPage() {
                 <Button type="button" size="sm" onClick={() => abrirConfirmar(s.id)}>
                   Confirmar
                 </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => rechazar(s.id)}>
+                <Button type="button" size="sm" variant="outline" onClick={() => abrirRechazar(s.id)}>
                   Rechazar
                 </Button>
                 <Button type="button" size="sm" variant="ghost" onClick={() => cancelar(s.id)}>
@@ -166,6 +178,16 @@ export default function SolicitudesStaffPage() {
             </div>
           </CardContent>
         </Card>
+      ) : null}
+      {rechazandoId ? (
+        <RechazarSolicitudDialog
+          solicitud={solicitudes.find((s) => s.id === rechazandoId)}
+          submitting={rechazandoSubmit}
+          onConfirm={confirmarRechazo}
+          onCancel={() => {
+            if (!rechazandoSubmit) setRechazandoId(null);
+          }}
+        />
       ) : null}
     </div>
   );
